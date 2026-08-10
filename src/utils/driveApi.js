@@ -196,14 +196,12 @@ export async function checkIdentifierExists(identifier) {
 }
 
 // ── Delete student ────────────────────────────────────────────────────────────
+// Called only from the Admin panel to permanently remove another student's
+// Drive folder — must propagate failures so the caller doesn't optimistically
+// remove the row from its own list when the backend delete actually failed.
 export async function deleteStudent(studentName, studentIdentifier = '') {
-  clearStudentFromLocalStorage();
-  try {
-    const folderKey = buildFolderKey(studentName, studentIdentifier);
-    await apiDelete('/api/students', { studentName: folderKey });
-  } catch (e) {
-    console.warn('deleteStudent API call failed:', e.message);
-  }
+  const folderKey = buildFolderKey(studentName, studentIdentifier);
+  await apiDelete('/api/students', { studentName: folderKey });
 }
 
 // ── OCR scan a Drive file (admin JWT required) ────────────────────────────────
