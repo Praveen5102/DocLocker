@@ -1724,6 +1724,23 @@
   flex: 1;
   min-width: 0;
 }
+.student-meta-error-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  padding: 2px 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.09);
+  border: 1px solid rgba(220, 38, 38, 0.25);
+  border-radius: 20px;
+  white-space: nowrap;
+  cursor: help;
+}
+
 .student-name {
   display: block;
   font-size: 14px;

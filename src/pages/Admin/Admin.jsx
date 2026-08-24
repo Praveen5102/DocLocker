@@ -1346,6 +1346,14 @@ function StudentRow({ student, isOpen, onToggle, onDelete, onOpenDrive, onViewRe
         <div className="student-info">
           <span className="student-name">{student.name || "Unknown Student"}</span>
           <span className="student-contact">{student.email || student.phone || "No contact info"}</span>
+          {student._parseError && (
+            <span
+              className="student-meta-error-badge"
+              title={`This student's data file is unreadable and could not be loaded: ${student._parseError}. Filters, progress, and details may be inaccurate until it's fixed (try Recover Meta).`}
+            >
+              <AlertTriangle size={11} /> Data unreadable
+            </span>
+          )}
         </div>
 
         <div className="student-meta">
@@ -2391,6 +2399,17 @@ function SettingsPanel({ onClose, adminName, adminRole }) {
 
 /* ─── Main Component ───────────────────────────────────────────── */
 
+// A stable per-student identity for React keys and state tracking.
+// driveUrl is always unique (one Drive folder per student); name is NOT —
+// two students can share a display name, and a student whose meta.json
+// failed to parse falls back to showing its raw folder-key name, which can
+// collide with another record. Using name/array-index as a key or state
+// pointer lets the wrong row appear expanded/selected after a filter or
+// list refresh reorders things.
+function studentKey(s) {
+  return s.driveUrl || s.email || s.phone || s.name;
+}
+
 export default function Admin() {
   const { isAdmin, adminRole, adminAdvisorName, adminName } = useStudent();
   const navigate = useNavigate();
@@ -2405,7 +2424,13 @@ export default function Admin() {
   const [bankers, setBankers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [expandedIdx, setExpandedIdx] = useState(null);
+  // Tracks the expanded row by a stable per-student key (driveUrl, falling
+  // back to email/phone/name), NOT by array index or by name alone. Both of
+  // those break as soon as the list is filtered/reordered or two students
+  // share a display name (e.g. a corrupted meta record falling back to its
+  // raw folder-key name) — the wrong row would appear expanded, showing one
+  // student's data on another student's row.
+  const [expandedKey, setExpandedKey] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -2447,15 +2472,23 @@ export default function Admin() {
     void loadBankers();
   }, [isAdmin, loadStudents, loadBankers]);
 
-  const handleDelete = async (name) => {
+  // Deletes by the actual student object (not by name — display names are
+  // not unique, e.g. two students can share a name, or a corrupted meta
+  // record falls back to showing its raw folder-key name). Matching by name
+  // could delete/hide the wrong row when two students collide on it.
+  const handleDelete = async (student) => {
     setDeleting(true);
     try {
-      const s = students.find((st) => st.name === name);
-      const identifier = s?.email || s?.phone || "";
-      await deleteStudent(name, identifier);
-      setStudents((prev) => prev.filter((s) => s.name !== name));
+      const identifier = student.email || student.phone || "";
+      await deleteStudent(student.name, identifier, student.driveUrl || "");
+      const key = studentKey(student);
+      setStudents((prev) => prev.filter((s) => studentKey(s) !== key));
       setConfirmDelete(null);
-      setExpandedIdx(null);
+      setExpandedKey((cur) => (cur === key ? null : cur));
+      // Re-sync from the backend — the cache was just cleared server-side,
+      // so this confirms the delete actually stuck instead of trusting the
+      // optimistic local removal alone.
+      void loadStudents();
     } catch (e) {
       setError("Delete failed: " + e.message);
     } finally {
@@ -2778,23 +2811,26 @@ export default function Admin() {
             </div>
           ) : (
             <div className="student-list">
-              {filtered.map((s, i) => (
-                <StudentRow
-                  key={s.name || i}
-                  student={s}
-                  isOpen={expandedIdx === i}
-                  onToggle={() => setExpandedIdx(expandedIdx === i ? null : i)}
-                  onDelete={(e) => { if (e) e.stopPropagation(); setConfirmDelete(s.name); }}
-                  onOpenDrive={(e) => { if (e) e.stopPropagation(); openDriveFolder(s); }}
-                  onViewReport={(e) => { if (e) e.stopPropagation(); setReportStudent(s); }}
-                  onSendToBank={(e) => { if (e) e.stopPropagation(); setBankStudent(s); }}
-                  onLoanStatusUpdate={(e) => { if (e) e.stopPropagation(); setLoanStatusStudent(s); }}
-                  onRecoverMeta={(e) => { if (e) e.stopPropagation(); setRecoverStudent(s); }}
-                  canEditConsultancy={adminRole === "advisor"}
-                  onConsultancySave={(value) => handleConsultancySave(s, value)}
-                  consultancySuggestions={consultancyList}
-                />
-              ))}
+              {filtered.map((s) => {
+                const k = studentKey(s);
+                return (
+                  <StudentRow
+                    key={k}
+                    student={s}
+                    isOpen={expandedKey === k}
+                    onToggle={() => setExpandedKey((cur) => (cur === k ? null : k))}
+                    onDelete={(e) => { if (e) e.stopPropagation(); setConfirmDelete(s); }}
+                    onOpenDrive={(e) => { if (e) e.stopPropagation(); openDriveFolder(s); }}
+                    onViewReport={(e) => { if (e) e.stopPropagation(); setReportStudent(s); }}
+                    onSendToBank={(e) => { if (e) e.stopPropagation(); setBankStudent(s); }}
+                    onLoanStatusUpdate={(e) => { if (e) e.stopPropagation(); setLoanStatusStudent(s); }}
+                    onRecoverMeta={(e) => { if (e) e.stopPropagation(); setRecoverStudent(s); }}
+                    canEditConsultancy={adminRole === "advisor"}
+                    onConsultancySave={(value) => handleConsultancySave(s, value)}
+                    consultancySuggestions={consultancyList}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
@@ -2850,7 +2886,7 @@ export default function Admin() {
       {/* Delete modal */}
       {confirmDelete && (
         <DeleteModal
-          name={confirmDelete}
+          name={confirmDelete.name}
           deleting={deleting}
           onConfirm={() => handleDelete(confirmDelete)}
           onCancel={() => setConfirmDelete(null)}

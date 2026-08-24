@@ -195,11 +195,29 @@ export async function checkIdentifierExists(identifier) {
   return !!(await searchStudentByIdentifier(identifier));
 }
 
+// Extract the Drive folder ID from a webViewLink, e.g.
+// "https://drive.google.com/drive/folders/<id>?usp=drivesdk" -> "<id>"
+function folderIdFromUrl(url) {
+  const m = /\/folders\/([a-zA-Z0-9_-]+)/.exec(url || '');
+  return m ? m[1] : null;
+}
+
 // ── Delete student ────────────────────────────────────────────────────────────
 // Called only from the Admin panel to permanently remove another student's
 // Drive folder — must propagate failures so the caller doesn't optimistically
 // remove the row from its own list when the backend delete actually failed.
-export async function deleteStudent(studentName, studentIdentifier = '') {
+//
+// Prefers folderId (extracted from the student's own driveUrl, so it's the
+// exact folder shown in the UI) over reconstructing the folder name from
+// studentName + studentIdentifier — that reconstruction can silently mismatch
+// the real Drive folder name (whitespace/casing drift, older naming scheme),
+// which previously made deletes no-op while still looking successful.
+export async function deleteStudent(studentName, studentIdentifier = '', driveUrl = '') {
+  const folderId = folderIdFromUrl(driveUrl);
+  if (folderId) {
+    await apiDelete('/api/students', { folderId });
+    return;
+  }
   const folderKey = buildFolderKey(studentName, studentIdentifier);
   await apiDelete('/api/students', { studentName: folderKey });
 }
