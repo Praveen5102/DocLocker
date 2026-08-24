@@ -1321,7 +1321,7 @@ function ConsultancyEditor({ value, onSave, suggestions = [] }) {
   );
 }
 
-function StudentRow({ student, isOpen, onToggle, onDelete, onOpenDrive, onViewReport, onSendToBank, onLoanStatusUpdate, onRecoverMeta, canEditConsultancy, onConsultancySave, consultancySuggestions }) {
+function StudentRow({ student, isOpen, onToggle, onDelete, onOpenDrive, onViewReport, onSendToBank, onLoanStatusUpdate, onRecoverMeta, canEditConsultancy, onConsultancySave, consultancySuggestions, isDuplicate }) {
   const [activeTab, setActiveTab] = useState("personal");
 
   const totalUploads = getTotalUploads(student);
@@ -1352,6 +1352,14 @@ function StudentRow({ student, isOpen, onToggle, onDelete, onOpenDrive, onViewRe
               title={`This student's data file is unreadable and could not be loaded: ${student._parseError}. Filters, progress, and details may be inaccurate until it's fixed (try Recover Meta).`}
             >
               <AlertTriangle size={11} /> Data unreadable
+            </span>
+          )}
+          {isDuplicate && (
+            <span
+              className="student-meta-error-badge student-duplicate-badge"
+              title="Another student record shares this same email or phone number — likely a duplicate Drive folder from a double submission. Check both records before deleting either one."
+            >
+              <AlertTriangle size={11} /> Possible duplicate
             </span>
           )}
         </div>
@@ -2539,6 +2547,29 @@ export default function Admin() {
     if (url) window.open(url, "_blank");
   };
 
+  // Flags students sharing a non-empty email or phone with another student —
+  // a sign of a duplicate Drive folder (most commonly from a double-submit
+  // race during registration/upload, before getOrCreate serialized those
+  // calls server-side). Computed across the FULL unscoped list so a
+  // superadmin sees cross-advisor duplicates too.
+  const duplicateIdentifiers = (() => {
+    const counts = new Map();
+    for (const s of students) {
+      for (const raw of [s.email, s.phone]) {
+        const v = (raw || "").trim().toLowerCase();
+        if (v) counts.set(v, (counts.get(v) || 0) + 1);
+      }
+    }
+    const dupes = new Set();
+    for (const [v, c] of counts) if (c > 1) dupes.add(v);
+    return dupes;
+  })();
+  const isDuplicateStudent = (s) => {
+    const e = (s.email || "").trim().toLowerCase();
+    const p = (s.phone || "").trim().toLowerCase();
+    return (e && duplicateIdentifiers.has(e)) || (p && duplicateIdentifiers.has(p));
+  };
+
   // Advisor scope applies everywhere on the dashboard — stats, list, everything.
   // Advisors are locked to their own students; superadmins can narrow via advisorFilter.
   // bankerFilter narrows further, on top of whichever scope above already applies.
@@ -2828,6 +2859,7 @@ export default function Admin() {
                     canEditConsultancy={adminRole === "advisor"}
                     onConsultancySave={(value) => handleConsultancySave(s, value)}
                     consultancySuggestions={consultancyList}
+                    isDuplicate={isDuplicateStudent(s)}
                   />
                 );
               })}

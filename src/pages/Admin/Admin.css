@@ -1729,6 +1729,7 @@
   align-items: center;
   gap: 4px;
   margin-top: 4px;
+  margin-right: 6px;
   padding: 2px 8px;
   font-size: 10.5px;
   font-weight: 700;
@@ -1739,6 +1740,12 @@
   border-radius: 20px;
   white-space: nowrap;
   cursor: help;
+}
+
+.student-duplicate-badge {
+  color: #b45309;
+  background: rgba(217, 119, 6, 0.1);
+  border-color: rgba(217, 119, 6, 0.28);
 }
 
 .student-name {
