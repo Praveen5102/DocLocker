@@ -39,6 +39,7 @@ import {
   ScanText,
   ShieldCheck,
   Pencil,
+  Landmark,
 } from "lucide-react";
 import { useStudent } from "../../context/StudentContext";
 import { getAllStudentsFromDrive, deleteStudent, updateLoanStatus, uploadSanctionLetter, recoverMetaFromPdf, restoreMeta, buildFolderKey } from "../../utils/driveApi";
@@ -273,6 +274,77 @@ function assessLoanEligibility(student) {
 }
 
 /* ─── Sub-components ───────────────────────────────────────────── */
+
+// True once at mount and kept in sync if the OS-level setting changes mid-session.
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const onChange = () => setReduced(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+  return reduced;
+}
+
+// Decorative "financing partners" strip — two rows of bank logos drifting in
+// opposite directions (top row leftward, bottom row rightward), each row's
+// logo set duplicated once so the loop wraps with no visible seam. Pure CSS
+// transform animation (GPU-composited, no layout/repaint cost), pauses on
+// hover so a curious admin can read a name, and drops to a static wrapped
+// row entirely under prefers-reduced-motion — both via this JS check and a
+// CSS media-query backstop, so it degrades even if JS hasn't hydrated yet.
+// Purely additive: sits in its own bordered card between the header and the
+// KPI panel, never overlaps or resizes anything else on the page.
+function PartnerBanksStrip() {
+  const reducedMotion = usePrefersReducedMotion();
+  const banks = BANK_OPTIONS.filter((b) => b.value !== "Others");
+  if (banks.length === 0) return null;
+
+  if (reducedMotion) {
+    return (
+      <div className="partner-banks-strip animate-fade-in">
+        <div className="partner-banks-label">
+          <Landmark size={13} />
+          <span>Our Financing Partners</span>
+        </div>
+        <div className="partner-banks-static-row">
+          {banks.map((b) => (
+            <div className="partner-bank-chip" key={b.value} title={b.label}>
+              <img src={b.logo} alt={b.label} loading="lazy" width={64} height={28} />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const half = Math.ceil(banks.length / 2);
+  const rowA = banks.slice(0, half);
+  const rowB = banks.slice(half).length > 0 ? banks.slice(half) : rowA;
+
+  return (
+    <div className="partner-banks-strip animate-fade-in">
+      <div className="partner-banks-label">
+        <Landmark size={13} />
+        <span>Our Financing Partners</span>
+      </div>
+      {[rowA, rowB].map((row, rowIdx) => (
+        <div className="partner-banks-marquee-row" key={rowIdx}>
+          <div className={`partner-banks-track ${rowIdx === 0 ? "partner-banks-track-left" : "partner-banks-track-right"}`}>
+            {[...row, ...row].map((b, i) => (
+              <div className="partner-bank-chip" key={b.value + i} title={b.label}>
+                <img src={b.logo} alt={b.label} loading="lazy" width={64} height={28} />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function StatsPanel({ stats, loanStats, filter, setFilter, loanStatusFilter, setLoanStatusFilter }) {
   const docCards = [
@@ -2746,6 +2818,9 @@ export default function Admin() {
             </button>
           </div>
         </div>
+
+        {/* Financing partner banks — decorative marquee */}
+        <PartnerBanksStrip />
 
         {/* Compact Stats Panel */}
         <StatsPanel

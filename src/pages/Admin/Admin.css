@@ -436,6 +436,120 @@
   .kpi-grid.kpi-grid-5 { grid-template-columns: repeat(2, 1fr); }
 }
 
+/* Partner Banks Strip
+   Decorative two-row counter-scrolling marquee. Each row's track is
+   the logo set duplicated once; the keyframe moves exactly -50% so
+   the seam between the two copies is invisible. transform-only
+   animation (GPU-composited) -- never triggers layout or repaint. */
+.partner-banks-strip {
+  margin-bottom: 20px;
+  padding: 14px 0 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  overflow: hidden;
+  animation: fadeSlideUp 0.4s ease both;
+}
+
+.partner-banks-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 20px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.partner-banks-marquee-row {
+  position: relative;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+          mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+}
+.partner-banks-marquee-row + .partner-banks-marquee-row {
+  margin-top: 10px;
+}
+
+.partner-banks-track {
+  display: flex;
+  gap: 12px;
+  width: max-content;
+  will-change: transform;
+}
+/* Pause on hover so a curious admin can read a logo without it drifting away. */
+.partner-banks-strip:hover .partner-banks-track {
+  animation-play-state: paused;
+}
+
+.partner-banks-track-left  { animation: partnerMarqueeLeft  34s linear infinite; }
+.partner-banks-track-right { animation: partnerMarqueeRight 34s linear infinite; }
+
+@keyframes partnerMarqueeLeft {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes partnerMarqueeRight {
+  from { transform: translateX(-50%); }
+  to   { transform: translateX(0); }
+}
+
+.partner-bank-chip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  height: 42px;
+  padding: 8px 12px;
+  background: #fff;
+  border: 1px solid rgba(15, 37, 68, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(15, 37, 68, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.partner-bank-chip:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(26, 110, 181, 0.16);
+  border-color: rgba(26, 110, 181, 0.3);
+}
+
+.partner-bank-chip img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: grayscale(1) opacity(0.6);
+  transition: filter 0.2s ease;
+}
+.partner-bank-chip:hover img {
+  filter: grayscale(0) opacity(1);
+}
+
+/* Reduced-motion fallback: plain wrapped row, no duplication, no animation. */
+.partner-banks-static-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 20px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partner-banks-track { animation: none !important; }
+}
+
+@media (max-width: 640px) {
+  .partner-bank-chip {
+    width: 84px;
+    height: 36px;
+    padding: 6px 10px;
+  }
+  .partner-banks-track { gap: 8px; }
+  .partner-banks-label { padding: 0 14px 8px; }
+  .partner-banks-static-row { padding: 0 14px; }
+}
+
 /* â”€â”€ Search + Toolbar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 .admin-toolbar {
   display: flex;
