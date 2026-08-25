@@ -566,7 +566,7 @@
   color: var(--text-primary);
 }
 
-/* ── Consultancy filter (advisors only) ─────────────────────────
+/* ── Consultancy filter (advisor + superadmin) ──────────────────
    Dropdown of consultancy names aggregated from student meta
    (personalInfo.consultantNameLoc) — shares .advisor-filter-select
    styling; teal accent when a consultancy is actively selected. */

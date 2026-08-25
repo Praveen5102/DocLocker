@@ -1246,7 +1246,7 @@ function FilesTab({ student }) {
 
 /* ─── Student Row ──────────────────────────────────────────────── */
 
-/* ─── Consultancy inline editor (advisor only) ─────────────────── */
+/* ─── Consultancy inline editor (advisor + superadmin) ─────────── */
 
 function ConsultancyEditor({ value, onSave, suggestions = [] }) {
   const [editing, setEditing] = useState(false);
@@ -2730,20 +2730,19 @@ export default function Admin() {
             ))}
           </div>
 
-          {adminRole === "advisor" && (
-            <select
-              className={`advisor-filter-select consultancy-filter-select${consultancyFilter ? " has-value" : ""}`}
-              value={consultancyFilter}
-              onChange={(e) => setConsultancyFilter(e.target.value)}
-              aria-label="Filter students by consultancy"
-            >
-              <option value="">All Consultancies</option>
-              {consultancyList.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-              <option value="__none__">— No consultancy set —</option>
-            </select>
-          )}
+          {/* Consultancy filter — visible to both advisor and superadmin */}
+          <select
+            className={`advisor-filter-select consultancy-filter-select${consultancyFilter ? " has-value" : ""}`}
+            value={consultancyFilter}
+            onChange={(e) => setConsultancyFilter(e.target.value)}
+            aria-label="Filter students by consultancy"
+          >
+            <option value="">All Consultancies</option>
+            {consultancyList.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+            <option value="__none__">— No consultancy set —</option>
+          </select>
 
           {adminRole !== "advisor" && advisorList.length > 0 && (
             <select
@@ -2856,7 +2855,7 @@ export default function Admin() {
                     onSendToBank={(e) => { if (e) e.stopPropagation(); setBankStudent(s); }}
                     onLoanStatusUpdate={(e) => { if (e) e.stopPropagation(); setLoanStatusStudent(s); }}
                     onRecoverMeta={(e) => { if (e) e.stopPropagation(); setRecoverStudent(s); }}
-                    canEditConsultancy={adminRole === "advisor"}
+                    canEditConsultancy={adminRole === "advisor" || adminRole === "superadmin"}
                     onConsultancySave={(value) => handleConsultancySave(s, value)}
                     consultancySuggestions={consultancyList}
                     isDuplicate={isDuplicateStudent(s)}
