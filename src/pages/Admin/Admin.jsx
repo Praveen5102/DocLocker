@@ -288,41 +288,54 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
-// Decorative "financing partners" logos — two fixed vertical rails hugging
-// the left and right edges of the viewport, each a column of full-color bank
-// logos drifting continuously (left rail top→bottom, right rail bottom→top).
-// Each column's logo set is duplicated once so the loop wraps with no
-// visible seam. Only enabled on very wide viewports (see CSS) where the
-// centered, max-width admin container already leaves an empty side gutter —
-// so the rails never sit near, let alone over, any real content, and are
-// fully hidden on laptop/tablet/mobile widths. Pure transform animation
-// (GPU-composited), pauses on hover, aria-hidden since it's purely
-// decorative, and honors prefers-reduced-motion both via this JS check
-// (skips duplicating content) and a CSS media-query backstop.
-function PartnerBanksRails() {
+// Decorative "financing partners" logos, responsive between two layouts so
+// something is always visible without ever overlapping real content:
+//   - Default (all screens up to very wide): a single horizontal marquee
+//     strip, rendered in normal document flow right after the header — it
+//     takes its own space, never floats over anything, so it works down to
+//     mobile widths.
+//   - Very wide screens only (see CSS breakpoint): swaps to two fixed
+//     vertical rails in the empty gutters beside the centered, max-width
+//     admin container (left rail drifts top→bottom, right rail bottom→top).
+// Both variants render in the DOM at all times; the CSS media query picks
+// exactly one to display (animations don't run on the display:none one, so
+// there's no wasted motion/CPU from the hidden variant). Every logo set is
+// duplicated once per track so the loop wraps with no visible seam. Pure
+// transform animation (GPU-composited), pauses on hover, aria-hidden since
+// it's purely decorative, and honors prefers-reduced-motion both via this
+// JS check (skips duplicating content) and a CSS media-query backstop.
+function PartnerBanksShowcase() {
   const reducedMotion = usePrefersReducedMotion();
   const banks = BANK_OPTIONS.filter((b) => b.value !== "Others");
   if (banks.length === 0) return null;
 
-  const renderRail = (side, direction) => {
-    const track = reducedMotion ? banks : [...banks, ...banks];
-    return (
-      <div className={`partner-rail partner-rail-${side}`} aria-hidden="true">
-        <div className={`partner-rail-track partner-rail-track-${direction}`}>
-          {track.map((b, i) => (
-            <div className="partner-rail-chip" key={b.value + i} title={b.label}>
-              <img src={b.logo} alt="" loading="lazy" width={56} height={30} />
-            </div>
-          ))}
-        </div>
+  const renderChips = (list) =>
+    list.map((b, i) => (
+      <div className="partner-chip" key={b.value + i} title={b.label}>
+        <img src={b.logo} alt="" loading="lazy" width={76} height={38} />
       </div>
-    );
-  };
+    ));
+
+  const doubled = reducedMotion ? banks : [...banks, ...banks];
 
   return (
     <>
-      {renderRail("left", "down")}
-      {renderRail("right", "up")}
+      {/* Small/medium/normal screens — inline horizontal strip */}
+      <div className="partner-banks-strip-inline animate-fade-in" aria-hidden="true">
+        {reducedMotion ? (
+          <div className="partner-strip-static">{renderChips(banks)}</div>
+        ) : (
+          <div className="partner-strip-track">{renderChips(doubled)}</div>
+        )}
+      </div>
+
+      {/* Very wide screens only — fixed vertical side rails */}
+      <div className="partner-rail partner-rail-left" aria-hidden="true">
+        <div className="partner-rail-track partner-rail-track-down">{renderChips(doubled)}</div>
+      </div>
+      <div className="partner-rail partner-rail-right" aria-hidden="true">
+        <div className="partner-rail-track partner-rail-track-up">{renderChips(doubled)}</div>
+      </div>
     </>
   );
 }
@@ -2800,8 +2813,8 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* Financing partner banks — decorative side rails (fixed-position, wide screens only) */}
-        <PartnerBanksRails />
+        {/* Financing partner banks — inline strip on most screens, side rails on very wide ones */}
+        <PartnerBanksShowcase />
 
         {/* Compact Stats Panel */}
         <StatsPanel

@@ -436,23 +436,102 @@
   .kpi-grid.kpi-grid-5 { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* Partner Banks Rails
-   Two fixed vertical columns of full-color bank logos in the left/right
-   viewport gutters, each column drifting continuously (left: top-to-bottom,
-   right: bottom-to-top). Track content is the logo set duplicated once;
-   the keyframe moves exactly -50% so the seam between the two copies is
-   invisible. transform-only animation (GPU-composited) -- never triggers
-   layout or repaint. Enabled only at very wide viewports (see media query
-   at the end) where the centered, max-width admin container already
-   leaves the gutter empty -- so this never sits near real content. */
+/* Partner Banks Showcase
+   Responsive between two layouts so something is always visible without
+   ever overlapping real content:
+     - Default (all screens, including small/mobile): an inline horizontal
+       marquee strip in normal document flow, right after the header.
+     - Very wide screens only (media query at the end): swaps to two fixed
+       vertical rails in the empty gutters beside the centered, max-width
+       admin container (left: top-to-bottom, right: bottom-to-top).
+   Both variants are always in the DOM; the media query below decides which
+   one is display:block (animations don't run on the display:none one, so
+   there's no wasted motion from the hidden variant). Every track's logo set
+   is duplicated once so the loop wraps with no visible seam. transform-only
+   animation (GPU-composited) -- never triggers layout or repaint. */
+
+.partner-chip {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 108px;
+  height: 52px;
+  padding: 6px;
+  background: var(--bg-raised);
+  border: 1px solid rgba(15, 37, 68, 0.10);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(15, 37, 68, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.partner-chip:hover {
+  transform: scale(1.07);
+  box-shadow: 0 10px 22px rgba(26, 110, 181, 0.20);
+  border-color: rgba(26, 110, 181, 0.3);
+}
+.partner-chip img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* ── Inline horizontal strip (default — all screens) ────────────── */
+.partner-banks-strip-inline {
+  display: block;
+  margin-bottom: 20px;
+  padding: 10px 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 2%, black 98%, transparent);
+          mask-image: linear-gradient(to right, transparent, black 2%, black 98%, transparent);
+}
+
+.partner-strip-track {
+  display: flex;
+  gap: 6px;
+  width: max-content;
+  padding: 0 6px;
+  will-change: transform;
+  animation: partnerStripLeft 24s linear infinite;
+}
+.partner-banks-strip-inline:hover .partner-strip-track {
+  animation-play-state: paused;
+}
+@keyframes partnerStripLeft {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+.partner-strip-static {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partner-strip-track { animation: none !important; }
+}
+
+@media (max-width: 640px) {
+  .partner-chip { width: 88px; height: 44px; padding: 5px; }
+  .partner-strip-track, .partner-strip-static { gap: 5px; }
+}
+
+/* ── Vertical side rails (very wide screens only) ────────────────
+   Enabled only once the viewport is wide enough that the 1200px-max
+   centered container leaves a genuinely empty gutter beside it —
+   otherwise a rail would sit awkwardly close to (or over) real content. */
 .partner-rail {
   position: fixed;
   top: 84px;
   bottom: 16px;
-  width: 92px;
+  width: 108px;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(to bottom, transparent, black 6%, black 94%, transparent);
-          mask-image: linear-gradient(to bottom, transparent, black 6%, black 94%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 2%, black 98%, transparent);
+          mask-image: linear-gradient(to bottom, transparent, black 2%, black 98%, transparent);
   pointer-events: none;
   z-index: 5;
   display: none;
@@ -463,18 +542,17 @@
 .partner-rail-track {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
   width: 100%;
   will-change: transform;
   pointer-events: auto;
 }
-/* Pause on hover so a curious admin can read a logo without it drifting away. */
 .partner-rail:hover .partner-rail-track {
   animation-play-state: paused;
 }
 
-.partner-rail-track-down { animation: partnerRailDown 26s linear infinite; }
-.partner-rail-track-up   { animation: partnerRailUp   26s linear infinite; }
+.partner-rail-track-down { animation: partnerRailDown 22s linear infinite; }
+.partner-rail-track-up   { animation: partnerRailUp   22s linear infinite; }
 
 @keyframes partnerRailDown {
   from { transform: translateY(-50%); }
@@ -485,41 +563,12 @@
   to   { transform: translateY(-50%); }
 }
 
-.partner-rail-chip {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 58px;
-  padding: 8px;
-  background: #fff;
-  border: 1px solid rgba(15, 37, 68, 0.08);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(15, 37, 68, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-.partner-rail-chip:hover {
-  transform: scale(1.07);
-  box-shadow: 0 10px 22px rgba(26, 110, 181, 0.20);
-  border-color: rgba(26, 110, 181, 0.3);
-}
-
-.partner-rail-chip img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .partner-rail-track { animation: none !important; }
 }
 
-/* Only enable once the viewport is wide enough that the 1200px-max centered
-   container leaves a genuinely empty gutter beside it -- otherwise the rail
-   would sit awkwardly close to (or over) real content. Below this width the
-   rails simply don't render their motion/layout at all (display: none). */
 @media (min-width: 1550px) {
+  .partner-banks-strip-inline { display: none; }
   .partner-rail { display: block; }
 }
 
