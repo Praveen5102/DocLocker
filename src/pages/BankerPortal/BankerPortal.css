@@ -12,7 +12,7 @@
 .banker-container {
   position: relative;
   z-index: 1;
-  max-width: 900px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 36px 28px 100px;
 }
@@ -575,6 +575,9 @@
 .lsm-option.loan-sanctioned.selected { border-color: #0d9488; background: rgba(13,148,136,0.08); color: #0d9488; }
 .lsm-option.loan-sanctioned .lsm-option-dot { background: #0d9488; }
 .lsm-option.loan-sanctioned .lsm-check { color: #0d9488; }
+.lsm-option.loan-disbursed.selected  { border-color: #059669; background: rgba(5,150,105,0.08); color: #059669; }
+.lsm-option.loan-disbursed .lsm-option-dot { background: #059669; }
+.lsm-option.loan-disbursed .lsm-check { color: #059669; }
 .lsm-option.loan-rejected.selected   { border-color: #dc2626; background: rgba(220,38,38,0.08); color: #dc2626; }
 .lsm-option.loan-rejected .lsm-option-dot   { background: #dc2626; }
 .lsm-option.loan-rejected .lsm-check { color: #dc2626; }
@@ -623,6 +626,44 @@
   width: 20px; height: 20px; cursor: pointer; flex-shrink: 0; transition: background 0.15s;
 }
 .lsm-file-remove:hover { background: rgba(220,38,38,0.20); }
+
+/* Disbursement details (loan-disbursed only) */
+.lsm-disbursement-wrap { display: flex; flex-direction: column; gap: 10px; }
+.lsm-disbursement-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.lsm-disbursement-field { display: flex; flex-direction: column; gap: 5px; }
+.lsm-disbursement-label { font-size: 11.5px; font-weight: 600; color: #94a3b8; }
+.lsm-disbursement-input-wrap {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid rgba(26, 110, 181, 0.15);
+  border-radius: 10px;
+  background: rgba(248, 250, 252, 0.96);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.lsm-disbursement-input-wrap:focus-within {
+  border-color: rgba(5,150,105,0.5);
+  box-shadow: 0 0 0 3px rgba(5,150,105,0.10);
+}
+.lsm-disbursement-unit { padding: 0 0 0 12px; font-size: 12px; font-weight: 600; color: #94a3b8; flex-shrink: 0; }
+.lsm-disbursement-input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  color: #0f2544;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+}
+.lsm-disbursement-input::placeholder { color: #94a3b8; }
+/* Last field (Insurance Amount) spans both columns so 5 fields sit 2/2/1 */
+.lsm-disbursement-field:last-child { grid-column: 1 / -1; }
+@media (max-width: 480px) {
+  .lsm-disbursement-grid { grid-template-columns: 1fr; }
+  .lsm-disbursement-field:last-child { grid-column: auto; }
+}
 
 /* ── Download All bar ── */
 .bp-download-all-bar {

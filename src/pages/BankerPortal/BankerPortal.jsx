@@ -13,6 +13,7 @@ const LOAN_STATUS_CONFIG = {
   pending:    { label: "Pending",    cls: "loan-pending" },
   inprocess:  { label: "In Process", cls: "loan-inprocess" },
   sanctioned: { label: "Sanctioned", cls: "loan-sanctioned" },
+  disbursed:  { label: "Disbursed",  cls: "loan-disbursed" },
   rejected:   { label: "Rejected",   cls: "loan-rejected" },
   dropped:    { label: "Dropped",    cls: "loan-dropped" },
 };
@@ -23,6 +24,17 @@ const REMARK_LABELS = {
   rejected: { label: "Rejection Remark", placeholder: "Describe the reason for rejection…" },
   dropped:  { label: "Drop Remark",      placeholder: "Describe why the application was dropped…" },
 };
+
+// Figures captured once a loan is marked disbursed (mirrors backend
+// DISBURSEMENT_FIELDS validation in routes/bankerAccess.js).
+const DISBURSEMENT_FIELDS = [
+  { key: "loanAmount",      label: "Loan Amount",     unit: "₹",      placeholder: "e.g. 1200000" },
+  { key: "tenureMonths",    label: "Tenure",           unit: "months", placeholder: "e.g. 84" },
+  { key: "interestRate",    label: "Interest Rate",    unit: "%",      placeholder: "e.g. 10.5" },
+  { key: "processingFee",   label: "Processing Fee",   unit: "₹",      placeholder: "e.g. 15000" },
+  { key: "insuranceAmount", label: "Insurance Amount",  unit: "₹",      placeholder: "e.g. 8000" },
+];
+const EMPTY_DISBURSEMENT = { loanAmount: "", tenureMonths: "", interestRate: "", processingFee: "", insuranceAmount: "" };
 
 function BpLoanBadge({ status }) {
   const cfg = LOAN_STATUS_CONFIG[status || "pending"] || LOAN_STATUS_CONFIG.pending;
@@ -85,6 +97,7 @@ export default function BankerPortal() {
   const [loanStatus, setLoanStatus] = useState("pending");
   const [loanRemark, setLoanRemark] = useState("");
   const [loanSanctionFile, setLoanSanctionFile] = useState(null);
+  const [loanDisbursement, setLoanDisbursement] = useState(EMPTY_DISBURSEMENT);
   const [loanLoading, setLoanLoading] = useState(false);
   const [loanLoadingMsg, setLoanLoadingMsg] = useState("");
   const [loanErr, setLoanErr] = useState("");
@@ -94,6 +107,7 @@ export default function BankerPortal() {
     setLoanStatus(s.loanStatus || "pending");
     setLoanRemark(s.loanRemark || "");
     setLoanSanctionFile(null);
+    setLoanDisbursement({ ...EMPTY_DISBURSEMENT, ...(s.loanDisbursement || {}) });
     setLoanErr("");
   };
 
@@ -103,6 +117,19 @@ export default function BankerPortal() {
       setLoanErr(`A remark is required when the loan is ${loanStatus === "rejected" ? "rejected" : "dropped"}.`);
       return;
     }
+    let disbursementPayload = null;
+    if (loanStatus === "disbursed") {
+      for (const { key, label } of DISBURSEMENT_FIELDS) {
+        const n = Number(loanDisbursement[key]);
+        if (loanDisbursement[key] === "" || Number.isNaN(n) || n < 0) {
+          setLoanErr(`Enter a valid ${label.toLowerCase()} to mark the loan as disbursed.`);
+          return;
+        }
+      }
+      disbursementPayload = Object.fromEntries(
+        DISBURSEMENT_FIELDS.map(({ key }) => [key, Number(loanDisbursement[key])]),
+      );
+    }
     setLoanLoading(true);
     setLoanErr("");
     try {
@@ -111,7 +138,8 @@ export default function BankerPortal() {
         loanModalStudent.name,
         loanModalStudent.email || loanModalStudent.phone || "",
         loanStatus,
-        loanRemark
+        loanRemark,
+        disbursementPayload
       );
       if (loanStatus === "sanctioned" && loanSanctionFile) {
         setLoanLoadingMsg("Uploading sanction letter…");
@@ -123,7 +151,9 @@ export default function BankerPortal() {
       }
       setStudents((prev) =>
         prev.map((s) =>
-          s.name === loanModalStudent.name ? { ...s, loanStatus, loanRemark } : s
+          s.name === loanModalStudent.name
+            ? { ...s, loanStatus, loanRemark, ...(disbursementPayload ? { loanDisbursement: disbursementPayload } : {}) }
+            : s
         )
       );
       setLoanModalStudent(null);
@@ -485,6 +515,33 @@ export default function BankerPortal() {
                       </div>
                     )}
                   </label>
+                </div>
+              )}
+              {loanStatus === "disbursed" && (
+                <div className="lsm-disbursement-wrap">
+                  <label className="lsm-remark-label">
+                    Disbursement Details <span className="required-star">*</span>
+                  </label>
+                  <div className="lsm-disbursement-grid">
+                    {DISBURSEMENT_FIELDS.map(({ key, label, unit, placeholder }) => (
+                      <div className="lsm-disbursement-field" key={key}>
+                        <label className="lsm-disbursement-label">{label}</label>
+                        <div className="lsm-disbursement-input-wrap">
+                          <span className="lsm-disbursement-unit">{unit}</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            inputMode="decimal"
+                            className="lsm-disbursement-input"
+                            placeholder={placeholder}
+                            value={loanDisbursement[key]}
+                            onChange={(e) => setLoanDisbursement((prev) => ({ ...prev, [key]: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
               {loanErr && <p className="lsm-error">{loanErr}</p>}

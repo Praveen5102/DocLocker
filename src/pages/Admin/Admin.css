@@ -88,7 +88,7 @@
 .admin-container {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
+  max-width: 1800px;
   margin: 0 auto;
   padding: 36px 28px 100px;
 }
@@ -428,12 +428,25 @@
 .kpi-violet:hover      { border-color: rgba(124,58,237,0.35); box-shadow: 0 8px 24px rgba(124,58,237,0.10); }
 .kpi-violet.kpi-active { border-color: #7c3aed; background: rgba(124,58,237,0.10); box-shadow: 0 0 0 3px rgba(124,58,237,0.12); }
 
-/* Loan status row has 5 cards — 5-up on desktop, falls back with the grid */
-.kpi-grid.kpi-grid-5 {
-  grid-template-columns: repeat(5, 1fr);
+/* -- Emerald -- Disbursed -- */
+.kpi-emerald {
+  background: linear-gradient(145deg, rgba(5,150,105,0.10) 0%, var(--bg-surface) 55%);
 }
-@media (max-width: 900px) {
-  .kpi-grid.kpi-grid-5 { grid-template-columns: repeat(2, 1fr); }
+.kpi-emerald::before    { background: #059669; }
+.kpi-emerald .kpi-dot   { background: #059669; }
+.kpi-emerald .kpi-value { color: #059669; }
+.kpi-emerald:hover      { border-color: rgba(5,150,105,0.35); box-shadow: 0 8px 24px rgba(5,150,105,0.10); }
+.kpi-emerald.kpi-active { border-color: #059669; background: rgba(5,150,105,0.11); box-shadow: 0 0 0 3px rgba(5,150,105,0.12); }
+
+/* Loan status row has 6 cards -- 6-up on desktop, stepping down as it narrows */
+.kpi-grid.kpi-grid-6 {
+  grid-template-columns: repeat(6, 1fr);
+}
+@media (max-width: 1200px) {
+  .kpi-grid.kpi-grid-6 { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 640px) {
+  .kpi-grid.kpi-grid-6 { grid-template-columns: repeat(2, 1fr); }
 }
 
 /* Partner Banks Showcase
@@ -719,10 +732,11 @@
   }
 }
 
-/* ── Consultancy strip (inline editor in expanded student row) ──
-   Advisor-only: view/set/correct the student's consultancy without
-   leaving the dashboard. Writes personalInfo.consultantNameLoc. */
-.consultancy-strip {
+/* ── Field strip (inline editor in expanded student row) ──
+   Shared layout for the Consultancy editor (advisor + superadmin; writes
+   personalInfo.consultantNameLoc) and the Advisor reassignment editor
+   (superadmin only; writes the student's top-level `advisor` field). */
+.field-strip {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -734,7 +748,7 @@
   border-radius: var(--radius-md);
 }
 
-.consultancy-strip-label {
+.field-strip-label {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -746,7 +760,7 @@
   flex-shrink: 0;
 }
 
-.consultancy-strip-view {
+.field-strip-view {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -755,24 +769,24 @@
   flex-wrap: wrap;
 }
 
-.consultancy-strip-value {
+.field-strip-value {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
   overflow-wrap: anywhere;
 }
-.consultancy-strip-value.empty {
+.field-strip-value.empty {
   color: var(--text-muted);
   font-style: italic;
   font-weight: 400;
 }
 
-.consultancy-edit-btn {
+.field-strip-edit-btn {
   margin-left: auto;
   flex-shrink: 0;
 }
 
-.consultancy-strip-edit {
+.field-strip-edit {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -781,7 +795,7 @@
   flex-wrap: wrap;
 }
 
-.consultancy-strip-input {
+.field-strip-input {
   flex: 1;
   min-width: 160px;
   height: 34px;
@@ -795,18 +809,18 @@
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.consultancy-strip-input:focus {
+.field-strip-input:focus {
   border-color: rgba(0, 209, 178, 0.4);
   box-shadow: 0 0 0 3px rgba(0, 209, 178, 0.08);
 }
-.consultancy-strip-input::placeholder {
+.field-strip-input::placeholder {
   color: var(--text-muted);
 }
-.consultancy-strip-input:disabled {
+.field-strip-input:disabled {
   opacity: 0.5;
 }
 
-.consultancy-strip-select {
+.field-strip-select {
   flex: 1;
   min-width: 200px;
   height: 34px;
@@ -821,40 +835,40 @@
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
-.consultancy-strip-select:focus {
+.field-strip-select:focus {
   border-color: rgba(0, 209, 178, 0.4);
   box-shadow: 0 0 0 3px rgba(0, 209, 178, 0.08);
 }
-.consultancy-strip-select:disabled {
+.field-strip-select:disabled {
   opacity: 0.5;
   cursor: default;
 }
-.consultancy-strip-select option {
+.field-strip-select option {
   background: var(--bg-surface);
   color: var(--text-primary);
 }
 
-.consultancy-strip-err {
+.field-strip-err {
   width: 100%;
   font-size: 12px;
   color: #e11d48;
 }
 
 @media (max-width: 640px) {
-  .consultancy-strip {
+  .field-strip {
     align-items: flex-start;
     flex-direction: column;
     gap: 8px;
   }
-  .consultancy-strip-view,
-  .consultancy-strip-edit {
+  .field-strip-view,
+  .field-strip-edit {
     width: 100%;
   }
-  .consultancy-edit-btn {
+  .field-strip-edit-btn {
     margin-left: 0;
   }
-  .consultancy-strip-input,
-  .consultancy-strip-select {
+  .field-strip-input,
+  .field-strip-select {
     width: 100%;
     min-width: 0;
   }
@@ -3793,6 +3807,10 @@
 .lsm-option.loan-sanctioned .lsm-option-dot { background: #0d9488; }
 .lsm-option.loan-sanctioned .lsm-check { color: #0d9488; }
 
+.lsm-option.loan-disbursed.selected  { border-color: #059669; background: rgba(5,150,105,0.08); color: #059669; }
+.lsm-option.loan-disbursed .lsm-option-dot { background: #059669; }
+.lsm-option.loan-disbursed .lsm-check { color: #059669; }
+
 .lsm-option.loan-rejected.selected   { border-color: #dc2626; background: rgba(220,38,38,0.08); color: #dc2626; }
 .lsm-option.loan-rejected .lsm-option-dot { background: #dc2626; }
 .lsm-option.loan-rejected .lsm-check { color: #dc2626; }
@@ -3894,6 +3912,66 @@
 }
 .lsm-file-remove:hover { background: rgba(220,38,38,0.20); }
 
+/* -- Disbursement details (loan-disbursed only) -- */
+.lsm-disbursement-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.lsm-disbursement-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.lsm-disbursement-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.lsm-disbursement-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.lsm-disbursement-input-wrap {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.lsm-disbursement-input-wrap:focus-within {
+  border-color: rgba(5,150,105,0.5);
+  box-shadow: 0 0 0 3px rgba(5,150,105,0.10);
+}
+.lsm-disbursement-unit {
+  padding: 0 0 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+.lsm-disbursement-input {
+  flex: 1;
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  outline: none;
+}
+.lsm-disbursement-input::placeholder {
+  color: var(--text-muted);
+}
+/* Last field (Insurance Amount) spans both columns so 5 fields sit 2/2/1 */
+.lsm-disbursement-field:last-child {
+  grid-column: 1 / -1;
+}
+
 .lsm-prev-remark {
   font-size: 12px;
   color: var(--text-muted);
@@ -3985,6 +4063,12 @@
   }
   .lsm-sub {
     max-width: 140px;
+  }
+  .lsm-disbursement-grid {
+    grid-template-columns: 1fr;
+  }
+  .lsm-disbursement-field:last-child {
+    grid-column: auto;
   }
 }
 

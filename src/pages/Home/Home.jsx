@@ -4,11 +4,12 @@ import {
   GraduationCap,
   Search,
   ArrowRight,
-  FileCheck,
+  TrendingUp,
   FolderOpen,
   Shield,
-  Sparkles,
+  Rocket,
 } from "lucide-react";
+import heroImg from "../../assets/bg.png";
 import { useStudent } from "../../context/StudentContext";
 import {
   saveStudentMeta,
@@ -194,12 +195,10 @@ export default function Home() {
 
   return (
     <>
-      <div className="home-page dashboard-viewport">
-        <div className="ambient-glow-network">
-          <div className="glow-cluster core-teal-glow" />
-          <div className="glow-cluster core-blue-glow" />
-        </div>
-
+      <div
+        className="home-page dashboard-viewport"
+        style={{ backgroundImage: `url(${heroImg})` }}
+      >
         <div className="home-split-layout">
           {/* Left Column */}
           <div className="brand-hero-column animate-fade-in">
@@ -215,38 +214,15 @@ export default function Home() {
                 single, high-fidelity deployment platform.
               </p>
 
-              <div className="asymmetric-feature-matrix">
+              <div className="hero-trust-row">
                 {[
-                  {
-                    icon: <FileCheck size={20} />,
-                    title: "Smart Context Redirection",
-                    desc: "Files parse and automatically append standard operational schemas perfectly.",
-                    badge: "Automated",
-                  },
-                  {
-                    icon: <FolderOpen size={20} />,
-                    title: "Asymmetric Directory Tree",
-                    desc: "Documents partition dynamically across standard Visa, Applicant, and Co-Applicant trees.",
-                    badge: "Structured",
-                  },
-                  {
-                    icon: <Shield size={20} />,
-                    title: "Encrypted Cloud Handshake",
-                    desc: "Secure end-to-end processing pipeline pushing nodes directly to your Google Drive ecosystem.",
-                    badge: "Protected",
-                  },
-                ].map((feature, idx) => (
-                  <div key={idx} className="matrix-item">
-                    <div className="matrix-icon-wrapper">{feature.icon}</div>
-                    <div className="matrix-body">
-                      <div className="matrix-header-row">
-                        <h4>{feature.title}</h4>
-                        <span className="matrix-micro-badge">
-                          {feature.badge}
-                        </span>
-                      </div>
-                      <p>{feature.desc}</p>
-                    </div>
+                  { icon: <Shield size={13} />, label: "Bank-Grade Security" },
+                  { icon: <TrendingUp size={13} />, label: "Real-time Loan Tracking" },
+                  { icon: <FolderOpen size={13} />, label: "Organized Document Vault" },
+                ].map((item, idx) => (
+                  <div key={idx} className="hero-trust-pill">
+                    <span className="hero-trust-pill-icon">{item.icon}</span>
+                    <span>{item.label}</span>
                   </div>
                 ))}
               </div>
@@ -258,15 +234,17 @@ export default function Home() {
             <div className="glass-workspace-card">
               {mode === "welcome" && (
                 <div className="workspace-welcome-view">
-                  <div className="workspace-header text-center">
+                  <div className="workspace-header-row">
                     <div className="spark-icon-container">
-                      <Sparkles size={18} className="accent-color-icon" />
+                      <Rocket size={20} className="accent-color-icon" />
                     </div>
-                    <h2>Get Started</h2>
-                    <p>
-                      Select your deployment profile to manage application
-                      assets
-                    </p>
+                    <div className="workspace-header">
+                      <h2>Get Started</h2>
+                      <p>
+                        Select your deployment profile to manage application
+                        assets
+                      </p>
+                    </div>
                   </div>
 
                   <div className="action-card-deck">

@@ -351,6 +351,7 @@ function StatsPanel({ stats, loanStats, filter, setFilter, loanStatusFilter, set
     { key: "pending",    label: "Pending",    value: loanStats.pending,    color: "slate" },
     { key: "inprocess",  label: "In Process", value: loanStats.inprocess,  color: "orange" },
     { key: "sanctioned", label: "Sanctioned", value: loanStats.sanctioned, color: "teal" },
+    { key: "disbursed",  label: "Disbursed",  value: loanStats.disbursed,  color: "emerald" },
     { key: "rejected",   label: "Rejected",   value: loanStats.rejected,   color: "rose" },
     { key: "dropped",    label: "Dropped",    value: loanStats.dropped,    color: "violet" },
   ];
@@ -372,7 +373,7 @@ function StatsPanel({ stats, loanStats, filter, setFilter, loanStatusFilter, set
       </div>
 
       <p className="kpi-section-title kpi-section-title-loan"><Banknote size={11} /> Loan Application Status</p>
-      <div className="kpi-grid kpi-grid-5">
+      <div className="kpi-grid kpi-grid-6">
         {loanCards.map(({ key, label, value, color }) => (
           <button key={key} type="button"
             className={`kpi-card kpi-${color}${loanStatusFilter === key ? " kpi-active" : ""}`}
@@ -418,6 +419,7 @@ const LOAN_STATUS_CONFIG = {
   pending:    { label: "Pending",     cls: "loan-pending" },
   inprocess:  { label: "In Process",  cls: "loan-inprocess" },
   sanctioned: { label: "Sanctioned",  cls: "loan-sanctioned" },
+  disbursed:  { label: "Disbursed",   cls: "loan-disbursed" },
   rejected:   { label: "Rejected",    cls: "loan-rejected" },
   dropped:    { label: "Dropped",     cls: "loan-dropped" },
 };
@@ -429,6 +431,17 @@ const REMARK_LABELS = {
   dropped:  { label: "Drop Remark",      placeholder: "Describe why the application was dropped…" },
 };
 
+// Figures captured once a loan is marked disbursed (mirrors backend
+// DISBURSEMENT_FIELDS validation in routes/bankerAccess.js).
+const DISBURSEMENT_FIELDS = [
+  { key: "loanAmount",     label: "Loan Amount",      unit: "₹",      placeholder: "e.g. 1200000" },
+  { key: "tenureMonths",   label: "Tenure",            unit: "months", placeholder: "e.g. 84" },
+  { key: "interestRate",   label: "Interest Rate",     unit: "%",      placeholder: "e.g. 10.5" },
+  { key: "processingFee",  label: "Processing Fee",    unit: "₹",      placeholder: "e.g. 15000" },
+  { key: "insuranceAmount", label: "Insurance Amount", unit: "₹",      placeholder: "e.g. 8000" },
+];
+const EMPTY_DISBURSEMENT = { loanAmount: "", tenureMonths: "", interestRate: "", processingFee: "", insuranceAmount: "" };
+
 function LoanStatusBadge({ status }) {
   const cfg = LOAN_STATUS_CONFIG[status || "pending"] || LOAN_STATUS_CONFIG.pending;
   return <span className={`loan-badge ${cfg.cls}`}>{cfg.label}</span>;
@@ -438,6 +451,10 @@ function LoanStatusModal({ student, onClose, onUpdated }) {
   const [status, setStatus] = useState(student.loanStatus || "pending");
   const [remark, setRemark] = useState(student.loanRemark || "");
   const [sanctionFile, setSanctionFile] = useState(null);
+  const [disbursement, setDisbursement] = useState({
+    ...EMPTY_DISBURSEMENT,
+    ...(student.loanDisbursement || {}),
+  });
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState("");
   const [err, setErr] = useState("");
@@ -448,16 +465,29 @@ function LoanStatusModal({ student, onClose, onUpdated }) {
       setErr(`A remark is required when the loan is ${status === "rejected" ? "rejected" : "dropped"}.`);
       return;
     }
+    let disbursementPayload = null;
+    if (status === "disbursed") {
+      for (const { key, label } of DISBURSEMENT_FIELDS) {
+        const n = Number(disbursement[key]);
+        if (disbursement[key] === "" || Number.isNaN(n) || n < 0) {
+          setErr(`Enter a valid ${label.toLowerCase()} to mark the loan as disbursed.`);
+          return;
+        }
+      }
+      disbursementPayload = Object.fromEntries(
+        DISBURSEMENT_FIELDS.map(({ key }) => [key, Number(disbursement[key])]),
+      );
+    }
     setLoading(true);
     setErr("");
     try {
       setLoadingMsg("Updating status…");
-      await updateLoanStatus(student.name, student.email || student.phone || "", status, remark);
+      await updateLoanStatus(student.name, student.email || student.phone || "", status, remark, disbursementPayload);
       if (status === "sanctioned" && sanctionFile) {
         setLoadingMsg("Uploading sanction letter…");
         await uploadSanctionLetter(student.name, student.email || student.phone || "", sanctionFile);
       }
-      onUpdated(student.name, status, remark);
+      onUpdated(student.name, status, remark, disbursementPayload);
       onClose();
     } catch (e2) {
       setErr(e2.message || "Failed to update loan status.");
@@ -542,6 +572,34 @@ function LoanStatusModal({ student, onClose, onUpdated }) {
                   </div>
                 )}
               </label>
+            </div>
+          )}
+
+          {status === "disbursed" && (
+            <div className="lsm-disbursement-wrap">
+              <label className="lsm-remark-label">
+                Disbursement Details <span className="required-star">*</span>
+              </label>
+              <div className="lsm-disbursement-grid">
+                {DISBURSEMENT_FIELDS.map(({ key, label, unit, placeholder }) => (
+                  <div className="lsm-disbursement-field" key={key}>
+                    <label className="lsm-disbursement-label">{label}</label>
+                    <div className="lsm-disbursement-input-wrap">
+                      <span className="lsm-disbursement-unit">{unit}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        inputMode="decimal"
+                        className="lsm-disbursement-input"
+                        placeholder={placeholder}
+                        value={disbursement[key]}
+                        onChange={(e) => setDisbursement((prev) => ({ ...prev, [key]: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
@@ -1362,25 +1420,25 @@ function ConsultancyEditor({ value, onSave, suggestions = [] }) {
   };
 
   return (
-    <div className="consultancy-strip">
-      <div className="consultancy-strip-label">
+    <div className="field-strip">
+      <div className="field-strip-label">
         <Building2 size={13} />
         <span>Consultancy</span>
       </div>
 
       {!editing ? (
-        <div className="consultancy-strip-view">
-          <span className={`consultancy-strip-value${value ? "" : " empty"}`}>
+        <div className="field-strip-view">
+          <span className={`field-strip-value${value ? "" : " empty"}`}>
             {value || "Not set"}
           </span>
-          <button className="btn btn-secondary btn-sm consultancy-edit-btn" onClick={begin}>
+          <button className="btn btn-secondary btn-sm field-strip-edit-btn" onClick={begin}>
             <Pencil size={12} /> {value ? "Edit" : "Set consultancy"}
           </button>
         </div>
       ) : mode === "select" ? (
-        <div className="consultancy-strip-edit">
+        <div className="field-strip-edit">
           <select
-            className="consultancy-strip-select"
+            className="field-strip-select"
             value={draft}
             autoFocus
             disabled={saving}
@@ -1408,9 +1466,9 @@ function ConsultancyEditor({ value, onSave, suggestions = [] }) {
           </button>
         </div>
       ) : (
-        <div className="consultancy-strip-edit">
+        <div className="field-strip-edit">
           <input
-            className="consultancy-strip-input"
+            className="field-strip-input"
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             placeholder="e.g. ABC Overseas, Hyderabad"
@@ -1441,12 +1499,92 @@ function ConsultancyEditor({ value, onSave, suggestions = [] }) {
         </div>
       )}
 
-      {err && <span className="consultancy-strip-err">{err}</span>}
+      {err && <span className="field-strip-err">{err}</span>}
     </div>
   );
 }
 
-function StudentRow({ student, isOpen, onToggle, onDelete, onOpenDrive, onViewReport, onSendToBank, onLoanStatusUpdate, onRecoverMeta, canEditConsultancy, onConsultancySave, consultancySuggestions, isDuplicate }) {
+/* ─── Advisor reassignment editor (superadmin only) ─────────────── */
+// Unlike ConsultancyEditor, there's no free-text mode — the advisor must be
+// one of the registered advisor accounts (options come from GET /api/advisors,
+// the same source Home.jsx's registration dropdown uses), since this field
+// also controls which advisor's dashboard the student shows up on.
+function AdvisorEditor({ value, onSave, options = [] }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  const begin = () => {
+    setErr("");
+    setDraft(value || "");
+    setEditing(true);
+  };
+  const cancel = () => { setEditing(false); setErr(""); };
+  const save = async () => {
+    setSaving(true);
+    setErr("");
+    try {
+      await onSave(draft);
+      setEditing(false);
+    } catch (e) {
+      setErr(e.message || "Could not save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // The student's current advisor might not be in the fetched options list
+  // (e.g. an advisor account that was since renamed/removed) — still show it
+  // as a selectable option so the dropdown doesn't silently switch off it.
+  const selectOptions = value && !options.includes(value) ? [value, ...options] : options;
+
+  return (
+    <div className="field-strip">
+      <div className="field-strip-label">
+        <UserCheck size={13} />
+        <span>Advisor</span>
+      </div>
+
+      {!editing ? (
+        <div className="field-strip-view">
+          <span className={`field-strip-value${value ? "" : " empty"}`}>
+            {value || "Not set"}
+          </span>
+          <button className="btn btn-secondary btn-sm field-strip-edit-btn" onClick={begin}>
+            <Pencil size={12} /> {value ? "Reassign" : "Assign advisor"}
+          </button>
+        </div>
+      ) : (
+        <div className="field-strip-edit">
+          <select
+            className="field-strip-select"
+            value={draft}
+            autoFocus
+            disabled={saving}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Escape") cancel(); }}
+          >
+            <option value="">Choose advisor…</option>
+            {selectOptions.map((a) => (
+              <option key={a} value={a}>{a}</option>
+            ))}
+          </select>
+          <button className="btn btn-primary btn-sm" onClick={save} disabled={saving || draft === value}>
+            {saving ? "Saving…" : "Save"}
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={cancel} disabled={saving}>
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {err && <span className="field-strip-err">{err}</span>}
+    </div>
+  );
+}
+
+function StudentRow({ student, isOpen, onToggle, onDelete, onOpenDrive, onViewReport, onSendToBank, onLoanStatusUpdate, onRecoverMeta, canEditConsultancy, onConsultancySave, consultancySuggestions, canEditAdvisor, onAdvisorSave, advisorOptions, isDuplicate }) {
   const [activeTab, setActiveTab] = useState("personal");
 
   const totalUploads = getTotalUploads(student);
@@ -1551,6 +1689,14 @@ function StudentRow({ student, isOpen, onToggle, onDelete, onOpenDrive, onViewRe
             {activeTab === "personal" && <PersonalTab student={student} />}
             {activeTab === "documents" && <DocumentsTab student={student} />}
             {activeTab === "files" && <FilesTab student={student} />}
+
+            {canEditAdvisor && (
+              <AdvisorEditor
+                value={student.advisor || ""}
+                onSave={onAdvisorSave}
+                options={advisorOptions}
+              />
+            )}
 
             {canEditConsultancy && (
               <ConsultancyEditor
@@ -2256,6 +2402,7 @@ function SettingsPanel({ onClose, adminName, adminRole }) {
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState("advisor");
   const [newAdminPass, setNewAdminPass] = useState("");
+  const [showNewAdminPass, setShowNewAdminPass] = useState(false);
   const [createMsg, setCreateMsg] = useState(null);
   const [createLoading, setCreateLoading] = useState(false);
 
@@ -2487,7 +2634,13 @@ function SettingsPanel({ onClose, adminName, adminRole }) {
                     </div>
                     <div className="input-group">
                       <label>Password</label>
-                      <input className="input-field" type="password" placeholder="Min. 6 characters" value={newAdminPass} onChange={(e) => setNewAdminPass(e.target.value)} />
+                      <div className="password-wrap">
+                        <input className="input-field" type={showNewAdminPass ? "text" : "password"} placeholder="Min. 6 characters"
+                          value={newAdminPass} onChange={(e) => setNewAdminPass(e.target.value)} />
+                        <button type="button" className="show-pass" onClick={() => setShowNewAdminPass(!showNewAdminPass)}>
+                          {showNewAdminPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                      </div>
                     </div>
                     {createMsg && <p className={`settings-msg ${createMsg.type}`}>{createMsg.text}</p>}
                     <button type="submit" className="btn btn-primary btn-sm" disabled={createLoading}>
@@ -2555,6 +2708,7 @@ export default function Admin() {
   const [loanStatusFilter, setLoanStatusFilter] = useState("all");
   const [consultancyFilter, setConsultancyFilter] = useState("");
   const [bankers, setBankers] = useState([]);
+  const [allAdvisors, setAllAdvisors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   // Tracks the expanded row by a stable per-student key (driveUrl, falling
@@ -2598,12 +2752,23 @@ export default function Admin() {
     } catch { /* silent — banker filter just won't show options */ }
   }, []);
 
+  // Full set of registered advisor accounts (not just those with students
+  // already assigned) — lets a superadmin hand a first student to an advisor
+  // who currently has none.
+  const loadAdvisors = useCallback(async () => {
+    try {
+      const r = await callAPI("GET", "/api/advisors");
+      if (r.success) setAllAdvisors(r.advisors || []);
+    } catch { /* silent — advisor reassignment dropdown just won't show options */ }
+  }, []);
+
   useEffect(() => {
     if (!isAdmin) return;
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadStudents();
     void loadBankers();
-  }, [isAdmin, loadStudents, loadBankers]);
+    void loadAdvisors();
+  }, [isAdmin, loadStudents, loadBankers, loadAdvisors]);
 
   // Deletes by the actual student object (not by name — display names are
   // not unique, e.g. two students can share a name, or a corrupted meta
@@ -2633,8 +2798,14 @@ export default function Admin() {
     setStudents((prev) => prev.map((s) => s.name === name ? { ...s, sharedBankers } : s));
   };
 
-  const handleLoanStatusChange = (name, loanStatus, loanRemark) => {
-    setStudents((prev) => prev.map((s) => s.name === name ? { ...s, loanStatus, loanRemark } : s));
+  const handleLoanStatusChange = (name, loanStatus, loanRemark, loanDisbursement) => {
+    setStudents((prev) =>
+      prev.map((s) =>
+        s.name === name
+          ? { ...s, loanStatus, loanRemark, ...(loanDisbursement ? { loanDisbursement } : {}) }
+          : s,
+      ),
+    );
   };
 
   // Advisor sets/corrects a student's consultancy from the admin panel.
@@ -2659,6 +2830,28 @@ export default function Admin() {
     if (!r.success) throw new Error(r.error || "Could not save consultancy");
     setStudents((prev) =>
       prev.map((s) => (s.name === student.name ? { ...s, personalInfo: updatedMeta.personalInfo } : s)),
+    );
+  };
+
+  // Superadmin reassigns which advisor a student belongs to. Writes the
+  // student's top-level `advisor` field via the same staff-only /api/meta
+  // route — this is also the field advisor-role scoping filters on
+  // (scopedStudents above), so a reassignment immediately moves the student
+  // off the old advisor's dashboard and onto the new one's.
+  const handleAdvisorSave = async (student, value) => {
+    const meta = { ...student };
+    delete meta.driveUrl;
+    delete meta._parseError;
+    const updatedMeta = { ...meta, advisor: value };
+    const identifier = student.email || student.phone || "";
+    const folderKey = buildFolderKey(student.name, identifier);
+    const r = await callAPI("POST", "/api/meta", {
+      studentName: folderKey,
+      metaJson: JSON.stringify(updatedMeta),
+    });
+    if (!r.success) throw new Error(r.error || "Could not save advisor");
+    setStudents((prev) =>
+      prev.map((s) => (s.name === student.name ? { ...s, advisor: value } : s)),
     );
   };
 
@@ -2716,6 +2909,7 @@ export default function Admin() {
     pending:    scopedStudents.filter((s) => !s.loanStatus || s.loanStatus === "pending").length,
     inprocess:  scopedStudents.filter((s) => s.loanStatus === "inprocess").length,
     sanctioned: scopedStudents.filter((s) => s.loanStatus === "sanctioned").length,
+    disbursed:  scopedStudents.filter((s) => s.loanStatus === "disbursed").length,
     rejected:   scopedStudents.filter((s) => s.loanStatus === "rejected").length,
     dropped:    scopedStudents.filter((s) => s.loanStatus === "dropped").length,
   };
@@ -2907,6 +3101,7 @@ export default function Admin() {
             <option value="pending">Pending</option>
             <option value="inprocess">In Process</option>
             <option value="sanctioned">Sanctioned</option>
+            <option value="disbursed">Disbursed</option>
             <option value="rejected">Rejected</option>
             <option value="dropped">Dropped</option>
           </select>
@@ -2986,6 +3181,9 @@ export default function Admin() {
                     canEditConsultancy={adminRole === "advisor" || adminRole === "superadmin"}
                     onConsultancySave={(value) => handleConsultancySave(s, value)}
                     consultancySuggestions={consultancyList}
+                    canEditAdvisor={adminRole === "superadmin"}
+                    onAdvisorSave={(value) => handleAdvisorSave(s, value)}
+                    advisorOptions={allAdvisors}
                     isDuplicate={isDuplicateStudent(s)}
                   />
                 );

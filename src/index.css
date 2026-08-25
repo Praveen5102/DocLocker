@@ -35,7 +35,7 @@ html {
   scroll-behavior: smooth;
   min-height: 100%;
   background-color: #eaedff;
-  background-image: url("./assets/background.png");
+  background-image: url("./assets/bg.png");
   background-size: cover;
   background-position: center top;
   background-repeat: no-repeat;
@@ -548,5 +548,6 @@ h6 {
 .loan-pending    { background: rgba(148,163,184,0.12); color: #64748b; border-color: rgba(148,163,184,0.28); }
 .loan-inprocess  { background: rgba(234,88,12,0.10);   color: #ea580c; border-color: rgba(234,88,12,0.28); }
 .loan-sanctioned { background: rgba(13,148,136,0.10);  color: #0d9488; border-color: rgba(13,148,136,0.28); }
+.loan-disbursed  { background: rgba(5,150,105,0.10);   color: #059669; border-color: rgba(5,150,105,0.28); }
 .loan-rejected   { background: rgba(220,38,38,0.09);   color: #dc2626; border-color: rgba(220,38,38,0.25); }
 .loan-dropped    { background: rgba(124,58,237,0.09);  color: #7c3aed; border-color: rgba(124,58,237,0.25); }

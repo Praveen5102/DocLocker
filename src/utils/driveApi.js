@@ -246,9 +246,13 @@ export function getFileProxyUrl(fileId, mode = 'view') {
 }
 
 // ── Update student loan status (admin / advisor / banker with access) ─────────
-export async function updateLoanStatus(studentName, studentIdentifier, loanStatus, loanRemark = '') {
+// disbursement: { processingFee, interestRate, loanAmount, tenureMonths, insuranceAmount }
+// — required by the backend when loanStatus is "disbursed", ignored otherwise.
+export async function updateLoanStatus(studentName, studentIdentifier, loanStatus, loanRemark = '', disbursement = null) {
   const folderKey = buildFolderKey(studentName, studentIdentifier || '');
-  return apiPut(`/api/students/${encodeURIComponent(folderKey)}/loan-status`, { loanStatus, loanRemark });
+  const body = { loanStatus, loanRemark };
+  if (disbursement) body.disbursement = disbursement;
+  return apiPut(`/api/students/${encodeURIComponent(folderKey)}/loan-status`, body);
 }
 
 // ── Upload sanction letter when loan is sanctioned ────────────────────────────

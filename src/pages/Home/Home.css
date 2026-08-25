@@ -9,21 +9,45 @@
   overflow-x: hidden;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding-top: 50px;
+  justify-content: flex-start;
+  padding-top: 72px;
+  /* Matches .navbar-container-core's own inset exactly (max-width: 1800px,
+     margin: 0 auto, padding: 0 24px) so the headline lines up with the brand
+     logo above it instead of drifting apart on wide/ultra-wide screens. */
+  padding-left: calc(max(0px, (100vw - 1800px) / 2) + 24px);
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
+}
+
+/* Soft left-to-right fade so hero text always reads clearly no matter what
+   sits behind it in the image, while the right side (world map + workflow
+   art) stays fully visible and unobstructed. */
+.home-page.dashboard-viewport::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.92) 0%,
+    rgba(255, 255, 255, 0.78) 32%,
+    rgba(255, 255, 255, 0.3) 52%,
+    transparent 68%
+  );
 }
 
 .home-split-layout {
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 60px 24px;
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 64px;
-  align-items: center;
+  max-width: 640px;
+  padding: 60px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 40px;
 }
 
 /* ==========================================================================
@@ -99,65 +123,6 @@
 }
 
 /* ==========================================================================
-   3. Dynamic Ambient Background Canvas
-   ========================================================================== */
-
-.ambient-glow-network {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.glow-cluster {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(140px);
-  opacity: 0.05;
-  mix-blend-mode: multiply;
-}
-
-.core-teal-glow {
-  width: 700px;
-  height: 700px;
-  background: radial-gradient(circle, #1a6eb5 0%, transparent 70%);
-  top: -10%;
-  left: -10%;
-  animation: warmPulseTeal 18s ease-in-out infinite alternate;
-}
-
-.core-blue-glow {
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, #3b82f6 0%, transparent 70%);
-  bottom: -5%;
-  right: -5%;
-  animation: warmPulseBlue 22s ease-in-out infinite alternate;
-}
-
-@keyframes warmPulseTeal {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.05;
-  }
-  100% {
-    transform: translate(80px, 40px) scale(1.15);
-    opacity: 0.08;
-  }
-}
-
-@keyframes warmPulseBlue {
-  0% {
-    transform: translate(0, 0) scale(1.1);
-    opacity: 0.06;
-  }
-  100% {
-    transform: translate(-60px, -50px) scale(0.9);
-    opacity: 0.04;
-  }
-}
-
-/* ==========================================================================
    4. Left Column Content
    ========================================================================== */
 
@@ -192,81 +157,41 @@
 }
 
 /* ==========================================================================
-   5. Asymmetric Feature Matrix Component
+   5. Hero Trust Row — compact badges that sit over the hero art without
+   competing with it (the image already carries the workflow visually)
    ========================================================================== */
 
-.asymmetric-feature-matrix {
+.hero-trust-row {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-  max-width: 560px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.matrix-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  padding: 20px;
-  background: #ffffff;
-  border: 1px solid rgba(26, 110, 181, 0.1);
-  border-radius: 16px;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 14px rgba(15, 37, 68, 0.07);
-}
-
-.matrix-item:hover {
-  border-color: rgba(26, 110, 181, 0.2);
-  transform: translateX(4px);
-  box-shadow: 0 4px 22px rgba(15, 37, 68, 0.11);
-}
-
-.matrix-icon-wrapper {
-  display: flex;
+.hero-trust-pill {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: #1a6eb5;
-  color: #ffffff;
-  flex-shrink: 0;
-}
-
-.matrix-body {
-  flex: 1;
-}
-
-.matrix-header-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 4px;
-}
-
-.matrix-body h4 {
-  font-size: 15px;
+  gap: 9px;
+  padding: 7px 16px 7px 7px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(26, 110, 181, 0.14);
+  border-radius: 999px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #1e3a5f;
+  box-shadow: 0 2px 10px rgba(15, 37, 68, 0.05);
 }
 
-.matrix-micro-badge {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #9ca3af;
+.hero-trust-pill-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(26, 110, 181, 0.12);
+  color: #1a6eb5;
   flex-shrink: 0;
-}
-
-.matrix-item:hover .matrix-micro-badge {
-  color: #6b7280;
-}
-
-.matrix-body p {
-  font-size: 13px;
-  color: #475569;
-  line-height: 1.5;
 }
 
 /* ==========================================================================
@@ -277,37 +202,50 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
+  /* Nudged right of the text column above it — dead-centering it would
+     crowd the headline, flush-left made it feel stranded in empty space. */
+  margin-left: clamp(24px, 6vw, 90px);
 }
 
 .glass-workspace-card {
   width: 100%;
   max-width: 480px;
-  min-height: 500px;
+  min-height: 400px;
   padding: 36px;
-  background: whitesmoke;
-  border: 1px solid rgba(26, 110, 181, 0.1);
-  border-radius: 24px;
-  box-shadow: 0 8px 40px rgba(15, 37, 68, 0.1);
+  background: linear-gradient(165deg, #ffffff 0%, #f5f9ff 100%);
+  border: 1px solid rgba(26, 110, 181, 0.12);
+  border-radius: 26px;
+  box-shadow:
+    0 1px 2px rgba(15, 37, 68, 0.04),
+    0 24px 48px -16px rgba(15, 37, 68, 0.16),
+    0 0 0 6px rgba(26, 110, 181, 0.03);
   display: flex;
   flex-direction: column;
+}
+
+.workspace-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
 }
 
 .spark-icon-container {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
   background: linear-gradient(
     135deg,
-    rgba(26, 110, 181, 0.1) 0%,
-    rgba(59, 151, 227, 0.1) 100%
+    rgba(26, 110, 181, 0.12) 0%,
+    rgba(59, 151, 227, 0.12) 100%
   );
   border: 1px solid rgba(26, 110, 181, 0.18);
-  margin-bottom: 16px;
+  flex-shrink: 0;
 }
 
 .accent-color-icon {
@@ -315,22 +253,17 @@
 }
 
 .workspace-header h2 {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: #0f2544;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   letter-spacing: -0.01em;
 }
 
 .workspace-header p {
-  font-size: 14px;
+  font-size: 13.5px;
   color: #475569;
   line-height: 1.5;
-  margin-bottom: 24px;
-}
-
-.text-center {
-  text-align: center;
 }
 
 /* ==========================================================================
@@ -349,7 +282,6 @@
   align-items: center;
   gap: 18px;
   padding: 22px;
-  background: #d2e1fe;
   border: 1px solid rgba(26, 110, 181, 0.1);
   border-radius: 14px;
   cursor: pointer;
@@ -358,6 +290,22 @@
   font-family: inherit;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 2px 8px rgba(15, 37, 68, 0.04);
+}
+
+.premium-interactive-card:hover {
+  transform: translateY(-2px);
+}
+
+.premium-interactive-card:active {
+  transform: translateY(0);
+}
+
+.new-node {
+  background: linear-gradient(135deg, rgba(26, 110, 181, 0.09) 0%, rgba(59, 151, 227, 0.05) 100%);
+}
+
+.returning-node {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.09) 0%, rgba(129, 140, 248, 0.05) 100%);
 }
 
 .card-glint-overlay {
@@ -385,35 +333,35 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(15, 37, 68, 0.06);
   transition: all 0.25s ease;
 }
 
 .new-node .card-icon-frame {
-  background: rgba(26, 110, 181, 0.08);
   color: #1a6eb5;
-  border: 1px solid rgba(26, 110, 181, 0.14);
+  border: 1px solid rgba(26, 110, 181, 0.16);
 }
 
 .returning-node .card-icon-frame {
-  background: rgba(99, 102, 241, 0.08);
   color: #6366f1;
-  border: 1px solid rgba(99, 102, 241, 0.14);
+  border: 1px solid rgba(99, 102, 241, 0.16);
 }
 
 .premium-interactive-card:hover .card-icon-frame {
-  transform: scale(1.05);
+  transform: scale(1.08);
 }
 
 .new-node:hover {
-  background: #e8f0ff;
-  border-color: rgba(26, 110, 181, 0.28);
-  box-shadow: 0 6px 24px rgba(26, 110, 181, 0.12);
+  background: linear-gradient(135deg, rgba(26, 110, 181, 0.16) 0%, rgba(59, 151, 227, 0.08) 100%);
+  border-color: rgba(26, 110, 181, 0.3);
+  box-shadow: 0 10px 28px -8px rgba(26, 110, 181, 0.22);
 }
 
 .returning-node:hover {
-  background: #edf0ff;
-  border-color: rgba(99, 102, 241, 0.28);
-  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.12);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.16) 0%, rgba(129, 140, 248, 0.08) 100%);
+  border-color: rgba(99, 102, 241, 0.3);
+  box-shadow: 0 10px 28px -8px rgba(99, 102, 241, 0.22);
 }
 
 .card-seo-content {
@@ -631,11 +579,20 @@ select.premium-styled-input option {
    10. Media Adaptation Layer (Responsive Controls)
    ========================================================================== */
 
-/* ── Tablet: single column, text on top ── */
+/* ── Tablet: single column, centered, text on top ──
+   The hero art no longer has room to sit unobstructed beside the content,
+   so the left-docked layout + fade scrim give way to a plain centered page. */
 @media (max-width: 1100px) {
+  .home-page.dashboard-viewport {
+    justify-content: center;
+    padding-left: 0;
+  }
+  .home-page.dashboard-viewport::before {
+    background: rgba(255, 255, 255, 0.88);
+  }
+
   .home-split-layout {
-    grid-template-columns: 1fr;
-    gap: 48px;
+    align-items: center;
     max-width: 640px;
     padding: 40px 24px 100px;
   }
@@ -654,13 +611,13 @@ select.premium-styled-input option {
     margin-right: auto;
   }
 
-  .asymmetric-feature-matrix {
-    max-width: 100%;
-    width: 100%;
+  .hero-trust-row {
+    justify-content: center;
   }
 
-  .matrix-item:hover {
-    transform: translateY(-2px);
+  .interactive-panel-column {
+    align-items: center;
+    margin-left: 0;
   }
 
   .glass-workspace-card {
@@ -714,54 +671,13 @@ select.premium-styled-input option {
       0 4px 16px rgba(26, 110, 181, 0.06);
   }
 
-  /* Feature matrix → compact 3-column icon grid */
-  .asymmetric-feature-matrix {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+  .hero-trust-row {
+    justify-content: center;
   }
 
-  .matrix-item {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    padding: 12px 8px;
-    gap: 8px;
-    border-radius: 12px;
-    background: #ffffff;
-    border-color: rgba(26, 110, 181, 0.1);
-  }
-
-  .matrix-item:hover {
-    transform: translateY(-2px);
-  }
-
-  .matrix-header-row {
-    flex-direction: column;
-    align-items: center;
-    gap: 0;
-  }
-
-  .matrix-micro-badge {
-    display: none;
-  }
-
-  .matrix-body p {
-    display: none;
-  }
-
-  .matrix-body h4 {
-    font-size: 11px;
-    font-weight: 600;
-    color: #1e3a5f;
-    line-height: 1.3;
-    margin-top: 4px;
-  }
-
-  .matrix-icon-wrapper {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+  .hero-trust-pill {
+    font-size: 11.5px;
+    padding: 7px 12px;
   }
 
   /* Action cards */
@@ -791,6 +707,9 @@ select.premium-styled-input option {
 
   .workspace-header p {
     font-size: 13px;
+  }
+
+  .workspace-header-row {
     margin-bottom: 18px;
   }
 
@@ -801,9 +720,8 @@ select.premium-styled-input option {
   }
 
   .spark-icon-container {
-    width: 38px;
-    height: 38px;
-    margin-bottom: 12px;
+    width: 40px;
+    height: 40px;
   }
 
   /* Logo strip */
@@ -846,18 +764,9 @@ select.premium-styled-input option {
     border-radius: 18px;
   }
 
-  .matrix-item {
-    padding: 10px 6px;
-  }
-
-  .matrix-icon-wrapper {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-  }
-
-  .matrix-body h4 {
-    font-size: 10px;
+  .hero-trust-pill {
+    font-size: 11px;
+    padding: 6px 10px;
   }
 
   .premium-interactive-card {
@@ -884,7 +793,7 @@ select.premium-styled-input option {
     padding: 14px 12px 60px;
   }
 
-  .asymmetric-feature-matrix {
+  .hero-trust-row {
     gap: 6px;
   }
 }

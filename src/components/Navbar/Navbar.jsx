@@ -15,8 +15,13 @@ export default function Navbar() {
     navigate("/");
   };
 
+  // Home has its own full-bleed hero image right up to the top of the page —
+  // a solid/glass navbar strip there would cut a visible band across it, so
+  // it stays transparent and lets the hero art show straight through.
+  const isHome = location.pathname === "/";
+
   return (
-    <nav className="premium-navbar-blur">
+    <nav className={`premium-navbar-blur${isHome ? " navbar-transparent" : ""}`}>
       <div className="navbar-container-core">
         {/* Brand Lockup System */}
         <Link to="/" className="navbar-brand-anchor">
