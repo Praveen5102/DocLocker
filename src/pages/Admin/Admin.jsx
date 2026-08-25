@@ -39,7 +39,6 @@ import {
   ScanText,
   ShieldCheck,
   Pencil,
-  Landmark,
 } from "lucide-react";
 import { useStudent } from "../../context/StudentContext";
 import { getAllStudentsFromDrive, deleteStudent, updateLoanStatus, uploadSanctionLetter, recoverMetaFromPdf, restoreMeta, buildFolderKey } from "../../utils/driveApi";
@@ -289,60 +288,42 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
-// Decorative "financing partners" strip — two rows of bank logos drifting in
-// opposite directions (top row leftward, bottom row rightward), each row's
-// logo set duplicated once so the loop wraps with no visible seam. Pure CSS
-// transform animation (GPU-composited, no layout/repaint cost), pauses on
-// hover so a curious admin can read a name, and drops to a static wrapped
-// row entirely under prefers-reduced-motion — both via this JS check and a
-// CSS media-query backstop, so it degrades even if JS hasn't hydrated yet.
-// Purely additive: sits in its own bordered card between the header and the
-// KPI panel, never overlaps or resizes anything else on the page.
-function PartnerBanksStrip() {
+// Decorative "financing partners" logos — two fixed vertical rails hugging
+// the left and right edges of the viewport, each a column of full-color bank
+// logos drifting continuously (left rail top→bottom, right rail bottom→top).
+// Each column's logo set is duplicated once so the loop wraps with no
+// visible seam. Only enabled on very wide viewports (see CSS) where the
+// centered, max-width admin container already leaves an empty side gutter —
+// so the rails never sit near, let alone over, any real content, and are
+// fully hidden on laptop/tablet/mobile widths. Pure transform animation
+// (GPU-composited), pauses on hover, aria-hidden since it's purely
+// decorative, and honors prefers-reduced-motion both via this JS check
+// (skips duplicating content) and a CSS media-query backstop.
+function PartnerBanksRails() {
   const reducedMotion = usePrefersReducedMotion();
   const banks = BANK_OPTIONS.filter((b) => b.value !== "Others");
   if (banks.length === 0) return null;
 
-  if (reducedMotion) {
+  const renderRail = (side, direction) => {
+    const track = reducedMotion ? banks : [...banks, ...banks];
     return (
-      <div className="partner-banks-strip animate-fade-in">
-        <div className="partner-banks-label">
-          <Landmark size={13} />
-          <span>Our Financing Partners</span>
-        </div>
-        <div className="partner-banks-static-row">
-          {banks.map((b) => (
-            <div className="partner-bank-chip" key={b.value} title={b.label}>
-              <img src={b.logo} alt={b.label} loading="lazy" width={64} height={28} />
+      <div className={`partner-rail partner-rail-${side}`} aria-hidden="true">
+        <div className={`partner-rail-track partner-rail-track-${direction}`}>
+          {track.map((b, i) => (
+            <div className="partner-rail-chip" key={b.value + i} title={b.label}>
+              <img src={b.logo} alt="" loading="lazy" width={56} height={30} />
             </div>
           ))}
         </div>
       </div>
     );
-  }
-
-  const half = Math.ceil(banks.length / 2);
-  const rowA = banks.slice(0, half);
-  const rowB = banks.slice(half).length > 0 ? banks.slice(half) : rowA;
+  };
 
   return (
-    <div className="partner-banks-strip animate-fade-in">
-      <div className="partner-banks-label">
-        <Landmark size={13} />
-        <span>Our Financing Partners</span>
-      </div>
-      {[rowA, rowB].map((row, rowIdx) => (
-        <div className="partner-banks-marquee-row" key={rowIdx}>
-          <div className={`partner-banks-track ${rowIdx === 0 ? "partner-banks-track-left" : "partner-banks-track-right"}`}>
-            {[...row, ...row].map((b, i) => (
-              <div className="partner-bank-chip" key={b.value + i} title={b.label}>
-                <img src={b.logo} alt={b.label} loading="lazy" width={64} height={28} />
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
+    <>
+      {renderRail("left", "down")}
+      {renderRail("right", "up")}
+    </>
   );
 }
 
@@ -2819,8 +2800,8 @@ export default function Admin() {
           </div>
         </div>
 
-        {/* Financing partner banks — decorative marquee */}
-        <PartnerBanksStrip />
+        {/* Financing partner banks — decorative side rails (fixed-position, wide screens only) */}
+        <PartnerBanksRails />
 
         {/* Compact Stats Panel */}
         <StatsPanel
