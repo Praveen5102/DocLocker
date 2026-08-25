@@ -670,6 +670,34 @@
   opacity: 0.5;
 }
 
+.consultancy-strip-select {
+  flex: 1;
+  min-width: 200px;
+  height: 34px;
+  padding: 0 12px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.consultancy-strip-select:focus {
+  border-color: rgba(0, 209, 178, 0.4);
+  box-shadow: 0 0 0 3px rgba(0, 209, 178, 0.08);
+}
+.consultancy-strip-select:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.consultancy-strip-select option {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
 .consultancy-strip-err {
   width: 100%;
   font-size: 12px;
@@ -689,7 +717,8 @@
   .consultancy-edit-btn {
     margin-left: 0;
   }
-  .consultancy-strip-input {
+  .consultancy-strip-input,
+  .consultancy-strip-select {
     width: 100%;
     min-width: 0;
   }

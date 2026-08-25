@@ -1248,13 +1248,39 @@ function FilesTab({ student }) {
 
 /* ─── Consultancy inline editor (advisor + superadmin) ─────────── */
 
+const NEW_CONSULTANCY_OPTION = "__new__";
+
 function ConsultancyEditor({ value, onSave, suggestions = [] }) {
   const [editing, setEditing] = useState(false);
+  // "select" shows a dropdown of existing consultancy names; "new" shows a
+  // free-text input — there's no fixed master list (students type their own
+  // consultancy), so there must be a way to add one not yet in the dropdown.
+  const [mode, setMode] = useState("select");
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
-  const begin = () => { setDraft(value || ""); setErr(""); setEditing(true); };
+  const begin = () => {
+    setErr("");
+    if (value && suggestions.includes(value)) {
+      // Already-set value matches an existing option — open on the dropdown, preselected.
+      setMode("select");
+      setDraft(value);
+    } else if (value) {
+      // Custom value not in the list — edit it as text directly.
+      setMode("new");
+      setDraft(value);
+    } else if (suggestions.length > 0) {
+      // Nothing set yet, but other consultancies exist — offer the dropdown first.
+      setMode("select");
+      setDraft("");
+    } else {
+      // No consultancies recorded anywhere yet — nothing to pick from.
+      setMode("new");
+      setDraft("");
+    }
+    setEditing(true);
+  };
   const cancel = () => { setEditing(false); setErr(""); };
   const save = async () => {
     setSaving(true);
@@ -1285,6 +1311,36 @@ function ConsultancyEditor({ value, onSave, suggestions = [] }) {
             <Pencil size={12} /> {value ? "Edit" : "Set consultancy"}
           </button>
         </div>
+      ) : mode === "select" ? (
+        <div className="consultancy-strip-edit">
+          <select
+            className="consultancy-strip-select"
+            value={draft}
+            autoFocus
+            disabled={saving}
+            onChange={(e) => {
+              if (e.target.value === NEW_CONSULTANCY_OPTION) {
+                setMode("new");
+                setDraft("");
+              } else {
+                setDraft(e.target.value);
+              }
+            }}
+            onKeyDown={(e) => { if (e.key === "Escape") cancel(); }}
+          >
+            <option value="">Choose existing consultancy…</option>
+            {suggestions.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+            <option value={NEW_CONSULTANCY_OPTION}>+ Add new consultancy…</option>
+          </select>
+          <button className="btn btn-primary btn-sm" onClick={save} disabled={saving || !draft}>
+            {saving ? "Saving…" : "Save"}
+          </button>
+          <button className="btn btn-secondary btn-sm" onClick={cancel} disabled={saving}>
+            Cancel
+          </button>
+        </div>
       ) : (
         <div className="consultancy-strip-edit">
           <input
@@ -1294,18 +1350,21 @@ function ConsultancyEditor({ value, onSave, suggestions = [] }) {
             placeholder="e.g. ABC Overseas, Hyderabad"
             autoFocus
             disabled={saving}
-            list="consultancy-name-suggestions"
             onKeyDown={(e) => {
               if (e.key === "Enter") save();
               if (e.key === "Escape") cancel();
             }}
           />
           {suggestions.length > 0 && (
-            <datalist id="consultancy-name-suggestions">
-              {suggestions.map((c) => (
-                <option key={c} value={c} />
-              ))}
-            </datalist>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              disabled={saving}
+              onClick={() => { setMode("select"); setDraft(""); }}
+              title="Pick from existing consultancies instead"
+            >
+              Choose existing
+            </button>
           )}
           <button className="btn btn-primary btn-sm" onClick={save} disabled={saving}>
             {saving ? "Saving…" : "Save"}
