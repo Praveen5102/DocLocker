@@ -15,8 +15,21 @@
      margin: 0 auto, padding: 0 24px) so the headline lines up with the brand
      logo above it instead of drifting apart on wide/ultra-wide screens. */
   padding-left: calc(max(0px, (100vw - 1800px) / 2) + 24px);
+  /* Pale near-white fallback matching the hero art's own background, in
+     case the image is ever slow to load or fails. */
+  background-color: #eef4fb;
+  /* `contain` (tried previously) never crops or upscales the art, but on
+     any viewport wider/narrower than its own ~16:9 it leaves a visible
+     empty gutter — which showed up as a plain white band on the side
+     opposite the image. `cover` always fills the box completely (no
+     gutter, ever), at the cost of cropping whichever edge has to give.
+     Anchoring it bottom-right makes sure that cropping only ever eats
+     into the top (empty sky/world-map — nothing lost) and, on narrow
+     screens, the left (skyline silhouettes — decorative), while the
+     bottom-right illustration (student, bank, upload icons) — the part
+     that actually matters — is never cropped or covered by anything. */
   background-size: cover;
-  background-position: top center;
+  background-position: bottom right;
   background-repeat: no-repeat;
 }
 

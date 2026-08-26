@@ -282,7 +282,10 @@
   padding: 14px 16px 12px;
   border-radius: 14px;
   border: 1px solid var(--border-dim);
-  background: var(--bg-surface);
+  /* Solid white, not the translucent --bg-surface used elsewhere — these
+     cards sit directly over the page's background image/pattern, and any
+     transparency let it bleed through and show as grime under the tint. */
+  background: #ffffff;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   cursor: pointer;
@@ -341,7 +344,7 @@
 
 /* â”€â”€ Blue â€” Total Students â”€â”€ */
 .kpi-blue {
-  background: linear-gradient(145deg, rgba(26,110,181,0.10) 0%, var(--bg-surface) 55%);
+  background: linear-gradient(145deg, rgba(26,110,181,0.10) 0%, transparent 55%), #ffffff;
 }
 .kpi-blue::before    { background: var(--blue); }
 .kpi-blue .kpi-icon  { color: var(--blue); }
@@ -351,7 +354,7 @@
 
 /* â”€â”€ Green â€” Completed â”€â”€ */
 .kpi-green {
-  background: linear-gradient(145deg, rgba(34,211,174,0.10) 0%, var(--bg-surface) 55%);
+  background: linear-gradient(145deg, rgba(34,211,174,0.10) 0%, transparent 55%), #ffffff;
 }
 .kpi-green::before    { background: var(--green); }
 .kpi-green .kpi-icon  { color: var(--green); }
@@ -361,7 +364,7 @@
 
 /* â”€â”€ Amber â€” In Progress â”€â”€ */
 .kpi-amber {
-  background: linear-gradient(145deg, rgba(217,119,6,0.10) 0%, var(--bg-surface) 55%);
+  background: linear-gradient(145deg, rgba(217,119,6,0.10) 0%, transparent 55%), #ffffff;
 }
 .kpi-amber::before    { background: var(--amber); }
 .kpi-amber .kpi-icon  { color: var(--amber); }
@@ -371,7 +374,7 @@
 
 /* â”€â”€ Red â€” Not Started â”€â”€ */
 .kpi-red {
-  background: linear-gradient(145deg, rgba(220,38,38,0.08) 0%, var(--bg-surface) 55%);
+  background: linear-gradient(145deg, rgba(220,38,38,0.08) 0%, transparent 55%), #ffffff;
 }
 .kpi-red::before    { background: var(--red); }
 .kpi-red .kpi-icon  { color: var(--red); }
@@ -381,7 +384,7 @@
 
 /* â”€â”€ Slate â€” Pending â”€â”€ */
 .kpi-slate {
-  background: linear-gradient(145deg, rgba(148,163,184,0.08) 0%, var(--bg-surface) 55%);
+  background: linear-gradient(145deg, rgba(148,163,184,0.08) 0%, transparent 55%), #ffffff;
 }
 .kpi-slate::before    { background: #94a3b8; }
 .kpi-slate .kpi-dot   { background: #94a3b8; }
@@ -391,7 +394,7 @@
 
 /* â”€â”€ Orange â€” In Process â”€â”€ */
 .kpi-orange {
-  background: linear-gradient(145deg, rgba(234,88,12,0.09) 0%, var(--bg-surface) 55%);
+  background: linear-gradient(145deg, rgba(234,88,12,0.09) 0%, transparent 55%), #ffffff;
 }
 .kpi-orange::before    { background: #ea580c; }
 .kpi-orange .kpi-dot   { background: #ea580c; }
@@ -401,7 +404,7 @@
 
 /* â”€â”€ Teal â€” Sanctioned â”€â”€ */
 .kpi-teal {
-  background: linear-gradient(145deg, rgba(13,148,136,0.09) 0%, var(--bg-surface) 55%);
+  background: linear-gradient(145deg, rgba(13,148,136,0.09) 0%, transparent 55%), #ffffff;
 }
 .kpi-teal::before    { background: #0d9488; }
 .kpi-teal .kpi-dot   { background: #0d9488; }
@@ -411,7 +414,7 @@
 
 /* â”€â”€ Rose â€” Rejected â”€â”€ */
 .kpi-rose {
-  background: linear-gradient(145deg, rgba(225,29,72,0.08) 0%, var(--bg-surface) 55%);
+  background: linear-gradient(145deg, rgba(225,29,72,0.08) 0%, transparent 55%), #ffffff;
 }
 .kpi-rose::before    { background: #e11d48; }
 .kpi-rose .kpi-dot   { background: #e11d48; }
@@ -430,7 +433,7 @@
 
 /* -- Emerald -- Disbursed -- */
 .kpi-emerald {
-  background: linear-gradient(145deg, rgba(5,150,105,0.10) 0%, var(--bg-surface) 55%);
+  background: linear-gradient(145deg, rgba(5,150,105,0.10) 0%, transparent 55%), #ffffff;
 }
 .kpi-emerald::before    { background: #059669; }
 .kpi-emerald .kpi-dot   { background: #059669; }
@@ -534,9 +537,15 @@
 }
 
 /* ── Vertical side rails (very wide screens only) ────────────────
-   Enabled only once the viewport is wide enough that the 1200px-max
-   centered container leaves a genuinely empty gutter beside it —
-   otherwise a rail would sit awkwardly close to (or over) real content. */
+   Enabled only once the viewport is wide enough that the 1800px-max
+   centered .admin-container (see above) leaves a genuinely empty gutter
+   beside it — otherwise the rail sits on top of real content instead of
+   beside it. Below that width the container fills the entire viewport
+   (max-width just caps it, it doesn't reserve side space), so there is
+   NO gutter at all until viewport > 1800px. The rail itself needs
+   126px of clearance (18px offset + 108px width) plus breathing room,
+   so each 1800px-wide gutter half must be >= ~166px — i.e. viewport
+   >= 1800 + 2*166 = 2132px. The 2150px breakpoint below matches that. */
 .partner-rail {
   position: fixed;
   top: 84px;
@@ -580,7 +589,7 @@
   .partner-rail-track { animation: none !important; }
 }
 
-@media (min-width: 1550px) {
+@media (min-width: 2150px) {
   .partner-banks-strip-inline { display: none; }
   .partner-rail { display: block; }
 }
