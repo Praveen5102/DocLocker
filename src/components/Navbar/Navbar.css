@@ -203,6 +203,13 @@
   .navbar-exit-trigger span {
     display: none;
   }
+  /* Kept visible: for a signed-out visitor this is the only action in the
+     nav at all, so it can't be reduced to an unexplained bare icon the way
+     the icon-only in-app shortcuts (Admin Dashboard, Exit Portal, etc.) can. */
+  .admin-secure-trigger span {
+    display: inline;
+    font-size: 12px;
+  }
   .navbar-deck-link,
   .navbar-exit-trigger {
     padding: 8px 10px;

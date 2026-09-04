@@ -44,6 +44,8 @@ export default function Navbar() {
             <Link
               to="/banker-portal"
               className={`navbar-deck-link ${location.pathname === "/banker-portal" ? "active" : ""}`}
+              title="Banker Portal"
+              aria-label="Banker Portal"
             >
               <Building2 size={15} />
               <span>Banker Portal</span>
@@ -55,6 +57,8 @@ export default function Navbar() {
             <Link
               to="/admin"
               className={`navbar-deck-link ${location.pathname === "/admin" ? "active" : ""}`}
+              title="Admin Dashboard"
+              aria-label="Admin Dashboard"
             >
               <LayoutDashboard size={15} />
               <span>Admin Dashboard</span>
@@ -66,6 +70,8 @@ export default function Navbar() {
             <Link
               to="/portal"
               className={`navbar-deck-link ${location.pathname.startsWith("/portal") ? "active" : ""}`}
+              title={student.name || "My Portal"}
+              aria-label={student.name || "My Portal"}
             >
               <GraduationCap size={16} />
               <span>{student.name?.split(" ")[0] || "My Portal"}</span>
@@ -74,7 +80,7 @@ export default function Navbar() {
           )}
 
           {(student || isAdmin) && (
-            <button className="navbar-exit-trigger" onClick={handleLogout}>
+            <button className="navbar-exit-trigger" onClick={handleLogout} title="Exit Portal" aria-label="Exit Portal">
               <LogOut size={14} />
               <span>Exit Portal</span>
             </button>
@@ -84,6 +90,8 @@ export default function Navbar() {
             <Link
               to="/admin-login"
               className="navbar-deck-link admin-secure-trigger"
+              title="Admin Gateway"
+              aria-label="Admin Gateway"
             >
               <Shield size={14} />
               <span>Admin Gateway</span>

@@ -1,812 +1,912 @@
+@import url("https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
+
 /* ==========================================================================
-   1. Viewport Structure & Layout Systems
+   StudyLend — Home
+   Two independent type scales: one for the hero (must shrink hard on
+   phones) and one for UI text inside the card (must stay readable and
+   never drop below tap-safe sizes). Breakpoints change structure only.
    ========================================================================== */
 
-.home-page.dashboard-viewport {
+.sl-home {
+  /* ── Brand palette ─────────────────────────────────────────────────── */
+  --ink: #0a1836;
+  --ink-soft: #46557a;
+  --ink-faint: #8494b4;
+
+  --blue: #1a6eb5;
+  --blue-deep: #0d4d8c;
+  --indigo: #4739c9;
+  --amber: #f2a413;
+
+  --surface-tint: #f4f8ff;
+  --line: rgba(26, 110, 181, 0.16);
+  --line-soft: rgba(26, 110, 181, 0.09);
+
+  --danger: #b91c1c;
+  --danger-bg: rgba(220, 38, 38, 0.07);
+
+  /* ── Layout ────────────────────────────────────────────────────────── */
+  --max: clamp(1120px, 92vw, 1580px);
+  --panel: clamp(430px, 36vw, 600px);      /* the card column — bigger now */
+  --gutter: clamp(16px, 4vw, 56px);
+  --col-gap: clamp(32px, 4vw, 88px);
+  --nav-offset: 72px;
+
+  /* ── Hero type: 28px on a 360px phone → 64px on a 24" monitor ─────── */
+  --t-display: clamp(1.75rem, 1.08rem + 2.6vw, 4rem);
+  --t-accent: clamp(1.2rem, 0.82rem + 1.5vw, 2.4rem);
+  --t-lede: clamp(0.9rem, 0.86rem + 0.2vw, 1.12rem);
+
+  /* ── Card/UI type: narrow range on purpose — never shrinks to unusable */
+  --t-h2: clamp(1.2rem, 1.1rem + 0.4vw, 1.6rem);
+  --t-body: clamp(0.84rem, 0.81rem + 0.14vw, 0.95rem);
+  --t-micro: clamp(0.73rem, 0.71rem + 0.1vw, 0.82rem);
+
+  --r-lg: clamp(20px, 1.4vw, 30px);
+  --r-md: clamp(13px, 1vw, 18px);
+  --r-sm: 11px;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
-  overflow-x: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-top: 72px;
-  /* Matches .navbar-container-core's own inset exactly (max-width: 1800px,
-     margin: 0 auto, padding: 0 24px) so the headline lines up with the brand
-     logo above it instead of drifting apart on wide/ultra-wide screens. */
-  padding-left: calc(max(0px, (100vw - 1800px) / 2) + 24px);
-  /* Pale near-white fallback matching the hero art's own background, in
-     case the image is ever slow to load or fails. */
+  overflow-x: clip;
+  display: grid;
+  place-items: center;
+  padding: calc(var(--nav-offset) + clamp(20px, 4vh, 52px)) var(--gutter)
+    clamp(36px, 6vh, 64px);
   background-color: #eef4fb;
-  /* `contain` (tried previously) never crops or upscales the art, but on
-     any viewport wider/narrower than its own ~16:9 it leaves a visible
-     empty gutter — which showed up as a plain white band on the side
-     opposite the image. `cover` always fills the box completely (no
-     gutter, ever), at the cost of cropping whichever edge has to give.
-     Anchoring it bottom-right makes sure that cropping only ever eats
-     into the top (empty sky/world-map — nothing lost) and, on narrow
-     screens, the left (skyline silhouettes — decorative), while the
-     bottom-right illustration (student, bank, upload icons) — the part
-     that actually matters — is never cropped or covered by anything. */
+  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  color: var(--ink-soft);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ==========================================================================
+   1. Ambient background stack
+   ========================================================================== */
+
+.sl-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.sl-bg__art {
+  position: absolute;
+  inset: 0;
   background-size: cover;
   background-position: bottom right;
   background-repeat: no-repeat;
+  opacity: 0.9;
+  -webkit-mask-image: linear-gradient(100deg, transparent 10%, #000 55%);
+  mask-image: linear-gradient(100deg, transparent 10%, #000 55%);
 }
 
-/* Soft left-to-right fade so hero text always reads clearly no matter what
-   sits behind it in the image, while the right side (world map + workflow
-   art) stays fully visible and unobstructed. */
-.home-page.dashboard-viewport::before {
+.sl-bg__field {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  will-change: transform;
+}
+
+.sl-bg__field--indigo {
+  width: clamp(300px, 42vw, 720px);
+  aspect-ratio: 1;
+  top: -14%;
+  left: -10%;
+  background: radial-gradient(
+    circle,
+    rgba(71, 57, 201, 0.34) 0%,
+    rgba(26, 110, 181, 0.16) 45%,
+    transparent 70%
+  );
+  animation: sl-drift-a 18s var(--ease) infinite alternate;
+}
+
+.sl-bg__field--amber {
+  width: clamp(240px, 32vw, 560px);
+  aspect-ratio: 1;
+  bottom: -18%;
+  right: 6%;
+  background: radial-gradient(
+    circle,
+    rgba(242, 164, 19, 0.26) 0%,
+    rgba(242, 164, 19, 0.08) 50%,
+    transparent 72%
+  );
+  animation: sl-drift-b 22s var(--ease) infinite alternate;
+}
+
+@keyframes sl-drift-a {
+  to { transform: translate3d(6%, 8%, 0) scale(1.12); }
+}
+@keyframes sl-drift-b {
+  to { transform: translate3d(-8%, -6%, 0) scale(1.08); }
+}
+
+.sl-bg__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(10, 24, 54, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10, 24, 54, 0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(120% 80% at 20% 30%, #000 0%, transparent 72%);
+  mask-image: radial-gradient(120% 80% at 20% 30%, #000 0%, transparent 72%);
+}
+
+.sl-bg__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(255, 255, 255, 0.94) 0%,
+    rgba(255, 255, 255, 0.74) 34%,
+    rgba(255, 255, 255, 0.22) 60%,
+    transparent 78%
+  );
+}
+
+/* ==========================================================================
+   2. Shell grid
+   ========================================================================== */
+
+.sl-shell {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: var(--max);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--panel);
+  align-items: center;
+  gap: var(--col-gap);
+}
+
+/* ==========================================================================
+   3. Hero column
+   ========================================================================== */
+
+.sl-hero {
+  min-width: 0;
+}
+
+.sl-title {
+  font-family: "Sora", sans-serif;
+  font-size: var(--t-display);
+  font-weight: 800;
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  color: var(--ink);
+  margin: 0 0 clamp(12px, 1.8vh, 22px);
+  text-wrap: balance;
+}
+
+.sl-title__accent {
+  display: block;
+  font-size: var(--t-accent);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-top: 0.14em;
+  background: linear-gradient(96deg, var(--blue) 0%, var(--indigo) 58%, var(--amber) 130%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.sl-lede {
+  font-size: var(--t-lede);
+  line-height: 1.6;
+  color: var(--ink-soft);
+  max-width: 46ch;
+  margin: 0 0 clamp(22px, 3.4vh, 40px);
+}
+
+/* ── Signature element: the loan file's real sequence ─────────────────── */
+.sl-journey {
+  list-style: none;
+  margin: 0 0 clamp(20px, 3vh, 34px);
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(12px, 1.6vw, 22px) clamp(18px, 2.4vw, 40px);
+}
+
+.sl-step {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-top: 13px;
+  border-top: 1px solid var(--line);
+}
+
+.sl-step::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--blue), var(--indigo));
+  transition: width 0.45s var(--ease);
+}
+
+.sl-step:hover::before { width: 100%; }
+
+.sl-step__num {
+  font-family: "Sora", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--blue);
+  padding-top: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sl-step__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.sl-step__title {
+  font-size: var(--t-body);
+  font-weight: 700;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+
+.sl-step__detail {
+  font-size: var(--t-micro);
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+
+/* ── Trust strip ───────────────────────────────────────────────────────── */
+.sl-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sl-trust__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: var(--t-micro);
+  font-weight: 600;
+  color: #1e3a5f;
+  box-shadow: 0 3px 10px rgba(10, 24, 54, 0.06);
+  backdrop-filter: blur(6px);
+}
+
+.sl-trust__pill svg {
+  color: var(--blue);
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   4. Action panel — the card is the heaviest object on the page
+   ========================================================================== */
+
+.sl-panel {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sl-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  /* A floor height so the short "Start here" view doesn't collapse into a
+     stub next to a tall hero, and the taller form view barely moves it. */
+  min-height: clamp(440px, 46vw, 560px);
+  padding: clamp(26px, 2.6vw, 48px);
+  background: linear-gradient(168deg, rgba(255, 255, 255, 0.98) 0%, var(--surface-tint) 100%);
+  border-radius: var(--r-lg);
+  box-shadow:
+    0 1px 2px rgba(10, 24, 54, 0.05),
+    0 34px 70px -22px rgba(10, 24, 54, 0.3);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+.sl-card::before {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 1;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(150deg, rgba(26, 110, 181, 0.55), rgba(71, 57, 201, 0.28) 45%, rgba(242, 164, 19, 0.35));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
   pointer-events: none;
-  background: linear-gradient(
-    100deg,
-    rgba(255, 255, 255, 0.92) 0%,
-    rgba(255, 255, 255, 0.78) 32%,
-    rgba(255, 255, 255, 0.3) 52%,
-    transparent 68%
-  );
 }
 
-.home-split-layout {
-  position: relative;
-  z-index: 2;
-  width: 100%;
-  max-width: 640px;
-  padding: 60px 0;
+.sl-view {
   display: flex;
   flex-direction: column;
+  width: 100%;
+}
+
+.sl-card__head {
+  display: flex;
   align-items: flex-start;
-  gap: 40px;
+  gap: 15px;
+  margin-bottom: clamp(20px, 2.2vw, 30px);
 }
 
-/* ==========================================================================
-   2. Workspace Embedded Highlight Logo Structure
-   ========================================================================== */
+.sl-card__head--form { display: block; }
 
-.brand-hero-logo-anchor {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  width: 100%;
-  margin-bottom: 28px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(26, 110, 181, 0.1);
-}
-
-.logo-glow-underlay {
-  position: absolute;
-  width: 110px;
-  height: 110px;
-  background: radial-gradient(
-    circle,
-    rgba(26, 110, 181, 0.12) 0%,
-    transparent 70%
-  );
-  z-index: 1;
-  pointer-events: none;
-  filter: blur(8px);
-}
-
-.hero-showcase-logo {
-  position: relative;
-  z-index: 2;
-  width: 90px;
-  height: 90px;
-  border-radius: 20px;
-  object-fit: cover;
-  background: #ffffff;
-  padding: 6px;
-  box-shadow:
-    0 8px 24px rgba(15, 37, 68, 0.14),
-    0 0 0 1px rgba(26, 110, 181, 0.1),
-    0 0 20px rgba(26, 110, 181, 0.06);
-  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.brand-hero-logo-anchor:hover .hero-showcase-logo {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow:
-    0 12px 32px rgba(15, 37, 68, 0.18),
-    0 0 0 1px rgba(26, 110, 181, 0.2),
-    0 0 25px rgba(26, 110, 181, 0.12);
-}
-
-.logo-brand-title {
-  font-size: 24px;
-  font-weight: 800;
-  color: #0f2544;
-  letter-spacing: -0.01em;
-  margin-top: 12px;
-  margin-bottom: 2px;
-}
-
-.logo-brand-subtitle {
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  color: #1a6eb5;
-  letter-spacing: 0.08em;
-}
-
-/* ==========================================================================
-   4. Left Column Content
-   ========================================================================== */
-
-.brand-hero-column {
-  display: flex;
-  flex-direction: column;
-}
-
-.main-display-headline {
-  font-size: 54px;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  color: #1f2173;
-  margin-bottom: 20px;
-}
-
-.gradient-text-block {
-  display: block;
-  font-family: "Sora", sans-serif;
-  font-size: 38px;
-  font-weight: 700;
-  color: #1a6eb5;
-}
-
-.editorial-sub-headline {
-  font-size: 17px;
-  color: #475569;
-  line-height: 1.65;
-  max-width: 540px;
-  margin-bottom: 40px;
-}
-
-/* ==========================================================================
-   5. Hero Trust Row — compact badges that sit over the hero art without
-   competing with it (the image already carries the workflow visually)
-   ========================================================================== */
-
-.hero-trust-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.hero-trust-pill {
+.sl-card__icon {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 7px 16px 7px 7px;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(26, 110, 181, 0.14);
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--blue) 0%, var(--indigo) 100%);
+  box-shadow: 0 8px 20px -6px rgba(26, 110, 181, 0.6);
+}
+
+.sl-card__head h2 {
+  font-family: "Sora", sans-serif;
+  font-size: var(--t-h2);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0 0 5px;
+}
+
+.sl-card__head p {
+  font-size: var(--t-body);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.sl-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 14px;
+  padding: 5px 12px 5px 9px;
+  background: rgba(26, 110, 181, 0.07);
+  border: 1px solid var(--line-soft);
   border-radius: 999px;
+  font: inherit;
   font-size: 12.5px;
   font-weight: 600;
-  color: #1e3a5f;
-  box-shadow: 0 2px 10px rgba(15, 37, 68, 0.05);
+  color: var(--blue);
+  cursor: pointer;
+  transition: background 0.2s var(--ease), transform 0.2s var(--ease);
 }
 
-.hero-trust-pill-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: rgba(26, 110, 181, 0.12);
-  color: #1a6eb5;
-  flex-shrink: 0;
+.sl-back:hover {
+  background: rgba(26, 110, 181, 0.13);
+  transform: translateX(-2px);
 }
 
-/* ==========================================================================
-   6. Right Column: Workspace Architecture Setup
-   ========================================================================== */
-
-.interactive-panel-column {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  width: 100%;
-  /* Nudged right of the text column above it — dead-centering it would
-     crowd the headline, flush-left made it feel stranded in empty space. */
-  margin-left: clamp(24px, 6vw, 90px);
-}
-
-.glass-workspace-card {
-  width: 100%;
-  max-width: 480px;
-  min-height: 400px;
-  padding: 36px;
-  background: linear-gradient(165deg, #ffffff 0%, #f5f9ff 100%);
-  border: 1px solid rgba(26, 110, 181, 0.12);
-  border-radius: 26px;
-  box-shadow:
-    0 1px 2px rgba(15, 37, 68, 0.04),
-    0 24px 48px -16px rgba(15, 37, 68, 0.16),
-    0 0 0 6px rgba(26, 110, 181, 0.03);
-  display: flex;
-  flex-direction: column;
-}
-
-.workspace-header-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.spark-icon-container {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    rgba(26, 110, 181, 0.12) 0%,
-    rgba(59, 151, 227, 0.12) 100%
-  );
-  border: 1px solid rgba(26, 110, 181, 0.18);
-  flex-shrink: 0;
-}
-
-.accent-color-icon {
-  color: #1a6eb5;
-}
-
-.workspace-header h2 {
-  font-size: 22px;
-  font-weight: 700;
-  color: #0f2544;
-  margin-bottom: 4px;
-  letter-spacing: -0.01em;
-}
-
-.workspace-header p {
-  font-size: 13.5px;
-  color: #475569;
-  line-height: 1.5;
-}
-
-/* ==========================================================================
-   7. Action Cards Deck Setup
-   ========================================================================== */
-
-.action-card-deck {
+/* ── Choice cards ──────────────────────────────────────────────────────── */
+.sl-choices {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.premium-interactive-card {
+.sl-choice {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 18px;
-  padding: 22px;
-  border: 1px solid rgba(26, 110, 181, 0.1);
-  border-radius: 14px;
-  cursor: pointer;
-  overflow: hidden;
+  gap: 16px;
+  width: 100%;
+  padding: clamp(18px, 1.7vw, 26px);
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
   text-align: left;
   font-family: inherit;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 2px 8px rgba(15, 37, 68, 0.04);
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease),
+    background 0.25s var(--ease), border-color 0.25s var(--ease);
 }
 
-.premium-interactive-card:hover {
-  transform: translateY(-2px);
-}
+.sl-choice:hover { transform: translateY(-3px); }
+.sl-choice:active { transform: translateY(0); }
 
-.premium-interactive-card:active {
-  transform: translateY(0);
-}
-
-.new-node {
-  background: linear-gradient(135deg, rgba(26, 110, 181, 0.09) 0%, rgba(59, 151, 227, 0.05) 100%);
-}
-
-.returning-node {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.09) 0%, rgba(129, 140, 248, 0.05) 100%);
-}
-
-.card-glint-overlay {
+.sl-choice__glint {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
   transform: translateX(-100%);
-  transition: transform 0.6s ease;
+  transition: transform 0.7s var(--ease);
 }
 
-.premium-interactive-card:hover .card-glint-overlay {
-  transform: translateX(100%);
-}
+.sl-choice:hover .sl-choice__glint { transform: translateX(100%); }
 
-.card-icon-frame {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  background: #ffffff;
-  box-shadow: 0 2px 6px rgba(15, 37, 68, 0.06);
-  transition: all 0.25s ease;
-}
-
-.new-node .card-icon-frame {
-  color: #1a6eb5;
-  border: 1px solid rgba(26, 110, 181, 0.16);
-}
-
-.returning-node .card-icon-frame {
-  color: #6366f1;
-  border: 1px solid rgba(99, 102, 241, 0.16);
-}
-
-.premium-interactive-card:hover .card-icon-frame {
-  transform: scale(1.08);
-}
-
-.new-node:hover {
-  background: linear-gradient(135deg, rgba(26, 110, 181, 0.16) 0%, rgba(59, 151, 227, 0.08) 100%);
-  border-color: rgba(26, 110, 181, 0.3);
-  box-shadow: 0 10px 28px -8px rgba(26, 110, 181, 0.22);
-}
-
-.returning-node:hover {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.16) 0%, rgba(129, 140, 248, 0.08) 100%);
-  border-color: rgba(99, 102, 241, 0.3);
-  box-shadow: 0 10px 28px -8px rgba(99, 102, 241, 0.22);
-}
-
-.card-seo-content {
-  flex: 1;
-}
-
-.card-seo-content h3 {
-  font-size: 15px;
-  font-weight: 600;
-  color: #0f2544;
-  margin-bottom: 4px;
-}
-
-.card-seo-content p {
-  font-size: 12px;
-  color: #475569;
-  line-height: 1.4;
-}
-
-.card-action-indicator {
-  color: #94a3b8;
-  transition: all 0.2s ease;
-}
-
-.premium-interactive-card:hover .card-action-indicator {
-  color: #0f2544;
-  transform: translateX(4px);
-}
-
-/* ==========================================================================
-   8. Form Structures & Modular Elements
-   ========================================================================== */
-
-.workspace-form-view {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.workspace-form-header {
-  margin-bottom: 24px;
-}
-
-.minimal-back-action {
-  background: none;
-  border: none;
-  color: #64748b;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  padding: 0;
-  margin-bottom: 14px;
-  font-family: inherit;
-  transition: color 0.15s ease;
-}
-
-.minimal-back-action:hover {
-  color: #1a6eb5;
-}
-
-.workspace-form-header h2 {
-  font-size: 22px;
-  font-weight: 700;
-  color: #0f2544;
-  margin-bottom: 6px;
-}
-
-.workspace-form-header p {
-  font-size: 13px;
-  color: #475569;
-}
-
-.modular-form-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.interactive-input-block {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.interactive-input-block label {
-  font-size: 13px;
-  font-weight: 500;
-  color: #334155;
-}
-
-.required-accent {
-  color: #1a6eb5;
-  margin-left: 2px;
-}
-
-.premium-styled-input {
-  width: 100%;
-  padding: 12px 14px;
-  background: #ffffff;
-  border: 1px solid rgba(26, 110, 181, 0.18);
-  border-radius: 10px;
-  font-size: 14px;
-  color: #0f2544;
-  font-family: inherit;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.premium-styled-input::placeholder {
-  color: #94a3b8;
-}
-
-.premium-styled-input:focus {
-  background: #ffffff;
-  border-color: rgba(26, 110, 181, 0.5);
-  box-shadow: 0 0 0 3px rgba(26, 110, 181, 0.1);
-}
-
-select.premium-styled-input {
-  appearance: none;
-  -webkit-appearance: none;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 14px center;
-  padding-right: 36px;
-}
-
-select.premium-styled-input option {
-  background-color: #ffffff;
-  color: #0f2544;
-  padding: 8px 14px;
-}
-
-.input-focus-border-line {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #1a6eb5, #3b97e3);
-  transition: all 0.3s ease;
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-
-.premium-styled-input:focus ~ .input-focus-border-line {
-  width: 80%;
-  border-radius: 100px;
-}
-
-/* ==========================================================================
-   9. Buttons, Handlers, & Feedback Node Overlays
-   ========================================================================== */
-
-.action-submit-button {
+.sl-choice__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  padding: 13px 22px;
-  border-radius: 10px;
-  font-size: 14px;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  transition: transform 0.25s var(--ease);
+}
+
+.sl-choice:hover .sl-choice__icon { transform: scale(1.07) rotate(-3deg); }
+
+.sl-choice__body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sl-choice__title {
+  font-size: clamp(0.92rem, 0.86rem + 0.2vw, 1.05rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.sl-choice__detail {
+  font-size: var(--t-micro);
+  line-height: 1.45;
+}
+
+.sl-choice__arrow {
+  flex-shrink: 0;
+  transition: transform 0.25s var(--ease);
+}
+
+.sl-choice:hover .sl-choice__arrow { transform: translateX(5px); }
+
+.sl-choice--primary {
+  background: linear-gradient(135deg, var(--blue) 0%, #1a3fa8 55%, var(--indigo) 100%);
+  box-shadow: 0 14px 30px -10px rgba(26, 63, 168, 0.6);
+  color: #fff;
+}
+
+.sl-choice--primary:hover { box-shadow: 0 20px 40px -10px rgba(26, 63, 168, 0.7); }
+
+.sl-choice--primary .sl-choice__icon {
+  background: rgba(255, 255, 255, 0.17);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.sl-choice--primary .sl-choice__detail { color: rgba(255, 255, 255, 0.82); }
+
+.sl-choice--ghost {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: var(--line);
+  color: var(--ink);
+  box-shadow: 0 2px 10px rgba(10, 24, 54, 0.05);
+}
+
+.sl-choice--ghost:hover {
+  border-color: rgba(71, 57, 201, 0.4);
+  box-shadow: 0 14px 30px -12px rgba(71, 57, 201, 0.35);
+}
+
+.sl-choice--ghost .sl-choice__icon {
+  background: rgba(71, 57, 201, 0.09);
+  border: 1px solid rgba(71, 57, 201, 0.18);
+  color: var(--indigo);
+}
+
+.sl-choice--ghost .sl-choice__detail { color: var(--ink-soft); }
+.sl-choice--ghost .sl-choice__arrow { color: var(--ink-faint); }
+
+/* ==========================================================================
+   5. Form
+   ========================================================================== */
+
+.sl-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.sl-form__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 15px;
+}
+
+.sl-form__note {
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+  margin: -7px 0 0;
+}
+
+.sl-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.sl-field__label {
+  font-size: 12.5px;
   font-weight: 600;
+  color: #33405c;
+}
+
+.sl-field__req {
+  color: var(--amber);
+  margin-left: 3px;
+}
+
+.sl-field__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sl-field__icon {
+  position: absolute;
+  left: 14px;
+  color: var(--ink-faint);
+  pointer-events: none;
+  transition: color 0.2s var(--ease);
+}
+
+.sl-field__control:focus-within .sl-field__icon { color: var(--blue); }
+
+.sl-field__hint {
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+  margin: 0;
+}
+
+.sl-input {
+  width: 100%;
+  padding: 14px 14px 14px 40px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
   font-family: inherit;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  margin-top: 6px;
+  font-size: 14.5px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
 
-.action-submit-button.call-to-action {
-  background: linear-gradient(135deg, #1a6eb5 0%, #0d508c 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 16px rgba(26, 110, 181, 0.28);
+.sl-input::placeholder { color: var(--ink-faint); }
+
+.sl-input:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(26, 110, 181, 0.14);
 }
 
-.action-submit-button.call-to-action:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(26, 110, 181, 0.4);
-}
-
-.action-submit-button.lookup-action {
-  background: linear-gradient(135deg, #4f46e5 0%, #312e81 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.22);
-}
-
-.action-submit-button.lookup-action:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(79, 70, 229, 0.36);
-}
-
-.action-submit-button:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.action-submit-button:disabled {
-  opacity: 0.6;
+.sl-input:disabled {
+  background: #f6f8fc;
   cursor: not-allowed;
 }
 
-.panel-error-alert {
-  padding: 12px 16px;
-  background: rgba(220, 38, 38, 0.06);
-  border: 1px solid rgba(220, 38, 38, 0.18);
-  border-radius: 10px;
-  color: #991b1b;
+.sl-input--select {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  padding-right: 38px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%234739c9' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+}
+
+.sl-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  margin-top: -7px;
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--indigo);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.sl-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px 14px;
+  background: var(--danger-bg);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--r-sm);
+  color: var(--danger);
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 1.45;
+}
+
+.sl-alert__icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.sl-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  margin-top: 4px;
+  padding: 15px 22px;
+  border: none;
+  border-radius: var(--r-sm);
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--blue) 0%, #1a3fa8 100%);
+  box-shadow: 0 10px 24px -8px rgba(26, 63, 168, 0.65);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease),
+    filter 0.2s var(--ease);
+}
+
+.sl-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -8px rgba(26, 63, 168, 0.7);
+  filter: saturate(1.1);
+}
+
+.sl-submit--alt {
+  background: linear-gradient(135deg, var(--indigo) 0%, #2a1f8f 100%);
+  box-shadow: 0 10px 24px -8px rgba(71, 57, 201, 0.6);
+}
+
+.sl-submit--alt:hover:not(:disabled) {
+  box-shadow: 0 16px 32px -8px rgba(71, 57, 201, 0.7);
+}
+
+.sl-submit:active:not(:disabled) { transform: translateY(0); }
+
+.sl-submit:disabled {
+  opacity: 0.65;
+  cursor: progress;
+  box-shadow: none;
+}
+
+.sl-spin { animation: sl-spin 0.9s linear infinite; }
+
+@keyframes sl-spin {
+  to { transform: rotate(360deg); }
+}
+
+.sl-panel__foot {
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+  text-align: center;
+  margin: 0;
 }
 
 /* ==========================================================================
-   10. Media Adaptation Layer (Responsive Controls)
+   6. Focus visibility
    ========================================================================== */
 
-/* ── Tablet: single column, centered, text on top ──
-   The hero art no longer has room to sit unobstructed beside the content,
-   so the left-docked layout + fade scrim give way to a plain centered page. */
-@media (max-width: 1100px) {
-  .home-page.dashboard-viewport {
-    justify-content: center;
-    padding-left: 0;
+.sl-home :is(button, input, select, a):focus-visible {
+  outline: 2px solid var(--indigo);
+  outline-offset: 3px;
+}
+
+/* ==========================================================================
+   7. Structural breakpoints
+   ========================================================================== */
+
+/* ── ≥1800px: stop growing, just centre. ─────────────────────────────── */
+@media (min-width: 1800px) {
+  .sl-home {
+    --max: 1620px;
+    --panel: 600px;
   }
-  .home-page.dashboard-viewport::before {
-    background: rgba(255, 255, 255, 0.88);
+  .sl-lede { max-width: 50ch; }
+}
+
+/* ── ≤1280px: shrink the panel before collapsing the grid. ───────────── */
+@media (max-width: 1280px) {
+  .sl-home {
+    --panel: clamp(380px, 38vw, 460px);
+    --col-gap: clamp(28px, 3.5vw, 56px);
+  }
+  .sl-card { min-height: 420px; }
+}
+
+/* ── ≤1024px: one column, hero first, everything left-aligned so the
+      journey list and lede share one clean left edge with the card. ──── */
+@media (max-width: 1024px) {
+  .sl-home {
+    --panel: 100%;
   }
 
-  .home-split-layout {
-    align-items: center;
-    max-width: 640px;
-    padding: 40px 24px 100px;
+  .sl-shell {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: 620px;
+    gap: clamp(26px, 4vh, 40px);
   }
 
-  .brand-hero-column {
-    text-align: center;
-    align-items: center;
+  .sl-bg__art {
+    -webkit-mask-image: linear-gradient(180deg, transparent 4%, #000 58%);
+    mask-image: linear-gradient(180deg, transparent 4%, #000 58%);
+    opacity: 0.5;
   }
 
-  .main-display-headline {
-    font-size: 42px;
+  .sl-bg__veil {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.93) 0%,
+      rgba(255, 255, 255, 0.72) 48%,
+      rgba(255, 255, 255, 0.42) 100%
+    );
   }
 
-  .editorial-sub-headline {
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .hero-trust-row {
-    justify-content: center;
-  }
-
-  .interactive-panel-column {
-    align-items: center;
-    margin-left: 0;
-  }
-
-  .glass-workspace-card {
-    max-width: 100%;
+  .sl-card {
+    min-height: 0;   /* content decides the height once stacked */
   }
 }
 
-/* ── Mobile: card on top, compact hero below ── */
-@media (max-width: 768px) {
-  .home-split-layout {
-    gap: 20px;
-    padding: 20px 16px 72px;
-    max-width: 480px;
+/* ── ≤720px: phones. Hero compresses hard, journey goes single column,
+      card takes the full width and keeps generous padding. ───────────── */
+@media (max-width: 720px) {
+  .sl-home {
+    place-items: start center;
+    padding-top: calc(var(--nav-offset) + 18px);
+    padding-bottom: 48px;
   }
 
-  /* Login / registration card floats to top on mobile */
-  .interactive-panel-column {
-    order: -1;
-  }
-  .brand-hero-column {
-    order: 1;
-  }
+  .sl-shell { max-width: 100%; }
 
-  /* Compact headline */
-  .main-display-headline {
-    font-size: 26px;
+  .sl-title {
+    line-height: 1.1;
+    letter-spacing: -0.025em;
     margin-bottom: 10px;
-    letter-spacing: -0.02em;
   }
 
-  .gradient-text-block {
-    font-size: 22px;
+  .sl-lede {
+    max-width: 38ch;
+    margin-bottom: 20px;
   }
 
-  .editorial-sub-headline {
-    font-size: 13.5px;
-    line-height: 1.6;
+  /* Full-width rows read faster than a cramped 2-up grid at this size. */
+  .sl-journey {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
     margin-bottom: 18px;
-    color: #64748b;
   }
 
-  /* Glass card: tighter, stronger presence */
-  .glass-workspace-card {
-    min-height: unset;
+  .sl-step {
+    padding: 11px 0;
+    gap: 11px;
+  }
+
+  .sl-trust {
+    gap: 7px;
+    margin-bottom: 2px;
+  }
+
+  .sl-card {
     padding: 24px 20px;
-    border-radius: 20px;
-    border-color: rgba(26, 110, 181, 0.14);
-    box-shadow:
-      0 0 0 1px rgba(26, 110, 181, 0.08),
-      0 16px 40px rgba(15, 37, 68, 0.12),
-      0 4px 16px rgba(26, 110, 181, 0.06);
   }
 
-  .hero-trust-row {
-    justify-content: center;
+  .sl-card__head { margin-bottom: 18px; }
+
+  .sl-card__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
   }
 
-  .hero-trust-pill {
-    font-size: 11.5px;
-    padding: 7px 12px;
-  }
-
-  /* Action cards */
-  .premium-interactive-card {
+  .sl-choice {
     padding: 16px;
-    gap: 14px;
+    gap: 13px;
+  }
+
+  .sl-choice__icon {
+    width: 42px;
+    height: 42px;
     border-radius: 12px;
   }
 
-  .card-icon-frame {
-    width: 40px;
-    height: 40px;
+  .sl-form__row { grid-template-columns: minmax(0, 1fr); }
+
+  /* 16px minimum stops iOS zooming the viewport on focus. */
+  .sl-input {
+    font-size: 16px;
+    padding: 14px 14px 14px 40px;
   }
 
-  .card-seo-content h3 {
-    font-size: 14px;
-  }
-
-  .card-seo-content p {
-    font-size: 11.5px;
-  }
-
-  /* Form */
-  .workspace-header h2 {
-    font-size: 20px;
-  }
-
-  .workspace-header p {
-    font-size: 13px;
-  }
-
-  .workspace-header-row {
-    margin-bottom: 18px;
-  }
-
-  .action-submit-button {
-    width: 100%;
-    justify-content: center;
-    padding: 12px 18px;
-  }
-
-  .spark-icon-container {
-    width: 40px;
-    height: 40px;
-  }
-
-  /* Logo strip */
-  .hero-showcase-logo {
-    width: 68px;
-    height: 68px;
-  }
-
-  .logo-brand-title {
-    font-size: 19px;
-  }
-
-  .logo-brand-subtitle {
-    font-size: 10px;
-  }
-
-  .brand-hero-logo-anchor {
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-  }
+  .sl-submit { padding: 15px 20px; }
 }
 
-/* ── Small phones ── */
-@media (max-width: 420px) {
-  .home-split-layout {
-    padding: 16px 14px 64px;
-    gap: 16px;
+/* ── ≤400px: small phones. ─────────────────────────────────────────────── */
+@media (max-width: 400px) {
+  .sl-home {
+    --gutter: 14px;
   }
 
-  .main-display-headline {
-    font-size: 23px;
-  }
+  .sl-lede { max-width: none; }
 
-  .gradient-text-block {
-    font-size: 20px;
-  }
+  .sl-card { padding: 20px 16px; }
 
-  .glass-workspace-card {
-    padding: 20px 16px;
-    border-radius: 18px;
-  }
-
-  .hero-trust-pill {
-    font-size: 11px;
-    padding: 6px 10px;
-  }
-
-  .premium-interactive-card {
+  .sl-choice {
     padding: 14px;
-    gap: 12px;
+    gap: 11px;
   }
+
+  .sl-choice__icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+
+  .sl-step__detail { line-height: 1.45; }
+
+  .sl-trust__pill { padding: 6px 11px; }
 }
 
-/* ── Very small phones ── */
-@media (max-width: 360px) {
-  .main-display-headline {
-    font-size: 21px;
+/* ── Short landscape (1366×768 laptops): trade vertical rhythm for fit. ── */
+@media (min-width: 1025px) and (max-height: 780px) {
+  .sl-home {
+    padding-top: calc(var(--nav-offset) + 14px);
+    padding-bottom: 22px;
   }
 
-  .gradient-text-block {
-    font-size: 18px;
+  .sl-card {
+    min-height: 400px;
+    padding: 26px 30px;
   }
 
-  .glass-workspace-card {
-    padding: 16px 12px;
+  .sl-journey { gap: 10px clamp(18px, 2.4vw, 36px); }
+  .sl-step { padding-top: 10px; }
+}
+
+/* ==========================================================================
+   8. Reduced motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .sl-home *,
+  .sl-home *::before,
+  .sl-home *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 
-  .home-split-layout {
-    padding: 14px 12px 60px;
-  }
-
-  .hero-trust-row {
-    gap: 6px;
+  .sl-choice:hover,
+  .sl-submit:hover:not(:disabled) {
+    transform: none;
   }
 }
